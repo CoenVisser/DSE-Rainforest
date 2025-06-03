@@ -32,7 +32,7 @@ sigma_yield_hook = 290* 10**6        # Yield strength [Pa]
 l_spine = 0.7                   # Length of the spine to cg [m]
 d_spine = 0.01                  # Diameter of the spine [m]
 alpha_spine = 20                # Angle of the spine with respect to the symmetry plane [degrees]
-beta_spine = 10                 # Angle of the spine with respect to the horizontal plane [degrees]
+beta_spine = 0                 # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                     # Number of spines [-]
 
 # Spine Material
@@ -46,7 +46,7 @@ n_spine = 2                     # Number of spines [-]
 l_bumper = 0.1                  # Length of the bumper to cg [m]
 d_bumper = 0.01                 # Diameter of the bumper [m]
 alpha_bumper = 20               # Angle of the bumper with respect to the symmetry plane [degrees]
-beta_bumper = 10                # Angle of the bumper with respect to the horizontal plane [degrees]
+beta_bumper = 0                # Angle of the bumper with respect to the horizontal plane [degrees]
 n_bumper = 2                    # Number of bumpers [-]
 
 # Bumper Material
@@ -59,8 +59,8 @@ n_bumper = 2                    # Number of bumpers [-]
 c_prop_h = 0.50                     # Horizontal clearance of the propeller [-]
 c_prop_v = 0.50                     # Vertical clearance of the propeller [-]
 d_prop = 0.25                       # Diameter of the propeller [m]
-alpha_prop = np.arctan2(d_prop*0.5*(1+c_prop_h), d_prop*0.5*(1+c_prop_v)) # Angle of the propeller with the symmetry plane [degrees]
-beta_prop =   0                     # Angle of the propeller with the horizontal plane [degrees]
+alpha_prop = np.arctan2(d_prop*0.5*(1+c_prop_h), d_prop*0.5*(1+c_prop_v))   # Angle of the propeller with the symmetry plane [degrees]
+beta_prop =   0                                                             # Angle of the propeller with the horizontal plane [degrees]
 n_prop = 4                          # Number of propellers [-]
 
 #=======================================================================
@@ -79,9 +79,9 @@ alpha = 15                      # Adhesion load angle [degrees]
 # Tree Properties
 #=======================================================================
 
-mu_asp = 0.20                   # Coefficient of friction [-]
-Ex_asp = 9.8 *10**9             # Young's modulus [Pa]
-v_asp = 0.4                     # Poisson's ratio [-]
+mu_tree = 0.20                   # Coefficient of friction [-]
+E_tree = 9.8 *10**9             # Young's modulus [Pa]
+v_tree = 0.4                     # Poisson's ratio [-]
 
 #========================================================================
 # Bark Properties
@@ -133,18 +133,18 @@ def constraint2(x, args):
     min_width = (2+c_prop_h)*d_prop
     return width - min_width
 
-args3 = (W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_asp, Ex_asp)
+args3 = (W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree)
 
 def constraint3(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
     W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree = args
-    Fs = 10*get_Fs(W, n_hook)
-    Fn = 10*get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
+    Fs = get_Fs(W, n_hook)
+    Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
     F_tot = np.sqrt(Fs**2 + Fn**2)
     F_max = get_Fmax(v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree)
     return F_max - F_tot
 
-args4 = (W, l_cg, beta_spine, beta_bumper, mu_asp)
+args4 = (W, l_cg, beta_spine, beta_bumper, mu_tree)
 
 def constraint4(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
@@ -165,9 +165,9 @@ def constraint5(x, args):
 constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint1(x, args1)},
     {'type': 'ineq', 'fun': lambda x: constraint2(x, args2)},
-    {'type': 'ineq', 'fun': lambda x: constraint3(x, args3)},
-    {'type': 'ineq', 'fun': lambda x: constraint4(x, args4)},
-    {'type': 'ineq', 'fun': lambda x: constraint5(x, args5)}
+    # {'type': 'ineq', 'fun': lambda x: constraint3(x, args3)},
+    # {'type': 'ineq', 'fun': lambda x: constraint4(x, args4)},
+    # {'type': 'ineq', 'fun': lambda x: constraint5(x, args5)}
 ]
 
 def optimize_hook(x0, args, bounds, constraints):
