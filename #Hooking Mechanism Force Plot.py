@@ -82,19 +82,14 @@ W = m*9.81                  # Weight of the bark [N]
 # Force Calculations
 #=======================================================================
 
-Fs = m*9.81/n_hook
+Fs = m*9.81/n_hook          # Tangential force per hook [N]
 Fnb = m*9.81*(l_cg + l_hook*np.cos(np.deg2rad(alpha_spine))*np.sin(np.deg2rad(beta_spine)))/(l_spine*np.cos(np.deg2rad(alpha_spine))*np.cos(np.deg2rad(beta_spine)) + l_bumper*np.cos(np.deg2rad(alpha_bumper))*np.cos(np.deg2rad(beta_bumper)))/n_hook
 Fnh = -Fnb
 
-Fmax = np.sqrt(Fs**2 + Fnh**2)
-theta = np.arctan2(Fnb, Fnh)
+F_tot = np.sqrt(Fs**2 + Fnh**2)
+gamma = np.arctan2(Fnb, Fnh)
 
-#Calculation of Forces
-Fg = m*9.81                                                 #Gravitational force
-Fs = Fg/n_hook                                              #Vertical force per hook
-Fn = Fs*alpha                                               #Horizontal force per hook
-F_asp = np.sqrt(Fs**2 + Fn**2)                              #Force on asperity
-sigma_max = 32*F_asp*l_hook*d_hook/(np.pi*d_hook**4)        #Maximum induced stress
+sigma_max = 32*F_tot*l_hook*d_hook/(np.pi*d_hook**4)        #Maximum induced stress
 
 E_tot = 1/((1-v_m**2)/E_m + (1-v_asp**2)/Ex_asp)            #Not sure about the 1/ part
 
@@ -104,14 +99,14 @@ f_max = min(f_tree, f_mat)                                  #Minimum sizing forc
 
 #Plotting
 fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
-theta = np.linspace(-alpha, np.arctan(mu_asp)+0.5*np.pi, num)
+theta = np.linspace(-np.deg2rad(alpha), np.arctan(mu_asp)+0.5*np.pi, num)
 r = [f_max]*num
 ax.fill_between(theta, r, color='green', alpha=0.5)
 theta_upper = [np.arctan(mu_asp)+0.5*np.pi] * num
 r_upper = np.linspace(0, f_max, num)
 ax.plot(theta_upper, r_upper, color='red')
 
-theta_lower = [-alpha] * num
+theta_lower = [-np.deg2rad(alpha)] * num
 r_lower = np.linspace(0, f_max, num)
 ax.fill_between(theta_lower, r_lower, color='blue')
 
