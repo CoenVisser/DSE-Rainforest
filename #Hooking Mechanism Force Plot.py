@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 num = 100
 
 #Material Properties
-l = 0.005#length of the hooks
-d = 0.001#diameter of the hooks
+l = 0.03#length of the hooks
+d = 0.005#diameter of the hooks
 #K = np.array([[Ex_sp, Exy_sp], [Exy_sp, Ey_sp]])
 n = 120 #number of hooks
-alpha = 1/6*np.pi# load angle
+alpha = 1/12*np.pi# load angle
 E_m = 200*10**9 #Elastic modulus
 v_m = 0.29 #Poisson's ratio
 R_tip = 20*10**(-6) #Radius of curvature of the spine
@@ -34,9 +34,16 @@ f_max = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
 
 #Plotting
 fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
-theta = np.linspace(-alpha, np.arctan(mu_asp), num)
+theta = np.linspace(-alpha, np.arctan(mu_asp)+0.5*np.pi, num)
 r = [f_max]*num
-ax.plot(theta, r)
+ax.fill_between(theta, r, color='green', alpha=0.5)
+theta_upper = [np.arctan(mu_asp)+0.5*np.pi] * num
+r_upper = np.linspace(0, f_max, num)
+ax.plot(theta_upper, r_upper, color='red')
+
+theta_lower = [-alpha] * num
+r_lower = np.linspace(0, f_max, num)
+ax.fill_between(theta_lower, r_lower, color='blue')
 
 ax.grid(True)
 ax.set_title('Force Plot for Hooking Mechanism')
