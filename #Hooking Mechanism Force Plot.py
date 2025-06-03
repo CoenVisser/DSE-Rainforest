@@ -13,6 +13,7 @@ alpha = 1/12*np.pi# load angle
 E_m = 200*10**9 #Elastic modulus
 v_m = 0.29 #Poisson's ratio
 R_tip = 20*10**(-6) #Radius of curvature of the spine
+sigma_yield = 290* 10**6
 
 #Tree Properties
 mu_asp = 0.20 #Coefficient of friction
@@ -31,6 +32,8 @@ sigma_max = 32*F_asp*l*d/(np.pi*d**4)
 
 E_tot = (1-v_m**2)/E_m + (1-v_asp**2)/Ex_asp
 f_max = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
+
+f_mat = np.pi/4 * d**2 * sigma_yield
 
 #Plotting
 fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
