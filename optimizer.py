@@ -90,8 +90,8 @@ v_asp = 0.4                     # Poisson's ratio [-]
 m = 2.7                         # Mass of the bark [kg]
 W = m*9.81                      # Weight of the bark [N]
 
-x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper]
-bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
+x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook]
+bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90), (1, 300)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
 args_obj = (beta_spine, beta_bumper)
 
 def get_Fs(W, n_hook):
@@ -109,7 +109,7 @@ def get_Fmax(v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree):
     return F_max
 
 def objective(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
     beta_spine, beta_bumper = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
     width = max(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
@@ -118,7 +118,7 @@ def objective(x, args):
 args1 = (c_prop_v, d_prop, beta_spine, beta_bumper)
 
 def constraint1(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
     c_prop_v, d_prop, beta_spine, beta_bumper = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
     min_height = (2+c_prop_v)*d_prop
@@ -127,37 +127,37 @@ def constraint1(x, args):
 args2 = (c_prop_h, d_prop, beta_spine, beta_bumper)
 
 def constraint2(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
     c_prop_h, d_prop, beta_spine, beta_bumper = args
     width = np.maximum(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
     min_width = (2+c_prop_h)*d_prop
     return width - min_width
 
-args3 = (W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_asp, Ex_asp, n_hook)
+args3 = (W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_asp, Ex_asp)
 
 def constraint3(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
-    W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree, n_hook = args
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
+    W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree = args
     Fs = 10*get_Fs(W, n_hook)
     Fn = 10*get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
     F_tot = np.sqrt(Fs**2 + Fn**2)
     F_max = get_Fmax(v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree)
     return F_max - F_tot
 
-args4 = (W, l_cg, beta_spine, beta_bumper, mu_asp, n_hook)
+args4 = (W, l_cg, beta_spine, beta_bumper, mu_asp)
 
 def constraint4(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
-    W, l_cg, beta_spine, beta_bumper, mu_tree, n_hook = args
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
+    W, l_cg, beta_spine, beta_bumper, mu_tree = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
     return mu_tree + Fs/Fn
 
-args5 = (W, l_cg, beta_spine, beta_bumper, alpha, n_hook)
+args5 = (W, l_cg, beta_spine, beta_bumper, alpha)
 
 def constraint5(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper = x
-    W, l_cg, beta_spine, beta_bumper, alpha, n_hook= args
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook = x
+    W, l_cg, beta_spine, beta_bumper, alpha = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
     return np.deg2rad(alpha) + Fn/Fs
