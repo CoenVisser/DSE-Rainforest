@@ -97,6 +97,8 @@ F_tree = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)     # Force 
 F_mat = np.pi/4 * d_hook**2 * sigma_yield                               # Force required to break the hook material [N]
 F_max = min(F_tree, F_mat)                                              # Minimum sizing force [N]
 
+print(F_max)
+
 #=======================================================================
 #Plotting
 #=======================================================================
@@ -106,9 +108,10 @@ fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
 theta = np.linspace(-np.deg2rad(alpha), np.arctan(mu_asp)+0.5*np.pi, num)
 r = [F_max]*num
 ax.fill_between(theta, r, color='green', alpha=0.5)
+
 theta_upper = [np.arctan(mu_asp)+0.5*np.pi] * num
-r_upper = np.linspace(0, F_mat, num)
-ax.plot(theta_upper, r_upper, color='red')
+r_upper = np.linspace(0, F_max, num)
+ax.fill_between(theta_upper, r_upper, color='red')
 
 theta_lower = [-np.deg2rad(alpha)] * num
 r_lower = np.linspace(0, F_max, num)
