@@ -57,6 +57,16 @@ n_bumper = 2                    # Number of bumpers [-]
 
 l_cg = 0.1                      # Distance from the surface to the center of mass [m]
 
+#=======================================================================
+# Propeller Properties
+#=======================================================================
+c_prop = 0.50                   #Clearance of the propeller [%]
+d_prop = 0.25                   #Diameter of the propeller [m]
+l_prop = np.sqrt(2*(d_prop*(1+c_prop)))                       #Length of the propeller arm for double symmetric quadcopter[m]
+alpha_prop =   np.arctan(d_prop*(1+c_prop), d_prop*(1+c_prop))                 #Angle of the propeller with the symmetry plane [degrees]
+beta_prop =   0                  #Angle of the propeller with the horizontal plane [degrees]
+n_prop = 4                       #Number of propellers [-]
+
 #========================================================================
 # Loading Properties
 #========================================================================
