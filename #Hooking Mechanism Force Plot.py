@@ -6,15 +6,15 @@ import matplotlib.pyplot as plt
 # Plot parameters
 #======================================================================
 
-num = 100                   #Plotting variable
+num = 1000                   #Plotting variable
 
 #======================================================================
 # Hook Properties
 #======================================================================
 
 # Hook Geometry
-l_hook = 0.02               # Length of the hooks [m]
-d_hook = 0.001              # Diameter of the hooks [m]
+l_hook = 0.023               # Length of the hooks [m]
+d_hook = 0.254* 10**(-3)              # Diameter of the hooks [m]
 n_hook = 120                # Number of hooks [-]
 R_tip = 20* 10**(-6)        # Radius of curvature of the spine [m]
 
@@ -97,7 +97,7 @@ f_tree = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
 f_mat = np.pi/4 * d_hook**2 * sigma_yield
 f_max = min(f_tree, f_mat)                                  #Minimum sizing force
 
-f_actual = F_tot/n_hook
+f_actual = F_tot
 
 #Plotting
 fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
@@ -117,7 +117,3 @@ ax.fill_between(theta_lower, r_lower, color='blue')
 ax.grid(True)
 ax.set_title('Force Plot for Hooking Mechanism')
 plt.show()
-
-
-
-
