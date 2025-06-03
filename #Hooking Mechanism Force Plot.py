@@ -2,35 +2,47 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-num = 100
+num = 100                   #Plotting variable
 
-#Material Properties
-l = 0.03#length of the hooks
-d = 0.005#diameter of the hooks
-#K = np.array([[Ex_sp, Exy_sp], [Exy_sp, Ey_sp]])
-n = 120 #number of hooks
-alpha = 1/12*np.pi# load angle
-E_m = 200*10**9 #Elastic modulus
-v_m = 0.29 #Poisson's ratio
-R_tip = 20*10**(-6) #Radius of curvature of the spine
+#Hook Properties
+l_hook = 0.02               #length of the hooks
+d_hook = 0.001              #diameter of the hooks
+n_hook = 120                #number of hooks
+R_tip = 20* 10**(-6)         #Radius of curvature of the spine
+
+#Hook Material Properties
+E_m = 200* 10**9             #Elastic modulus
+v_m = 0.29                  #Poisson's ratio
+sigma_yield = 290* 10**6
+
+#Spine Properties
+l_spine = 0.2
+d_spine = 0.01
+n_spine = 2
+
+#Loading Properties
+alpha = 1/12*np.pi          # load angle
 
 #Tree Properties
-mu_asp = 0.20 #Coefficient of friction
-Ex_asp = 9.8 *10**9 #Young's modulus in Pa
-v_asp = 0.4
+mu_asp = 0.20               #Coefficient of friction
+Ex_asp = 9.8 *10**9         #Young's modulus in Pa
+v_asp = 0.4                 #Poisson's ratio   
 
 #BARK properties
-m = 2.7
+m = 2.7                     #mass of the bark in kg   
 
 #Calculation of Forces
-Fg = m*9.81
-Fs = Fg/n
-Fn = Fs*alpha
-F_asp = np.sqrt(Fs**2 + Fn**2)
-sigma_max = 32*F_asp*l*d/(np.pi*d**4)
+Fg = m*9.81                                                 #Gravitational force
+Fs = Fg/n_hook                                              #Vertical force per hook
+Fn = Fs*alpha                                               #Horizontal force per hook
+F_asp = np.sqrt(Fs**2 + Fn**2)                              #Force on asperity
+sigma_max = 32*F_asp*l_hook*d_hook/(np.pi*d_hook**4)        #Maximum induced stress
 
-E_tot = (1-v_m**2)/E_m + (1-v_asp**2)/Ex_asp
-f_max = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
+E_tot = 1/((1-v_m**2)/E_m + (1-v_asp**2)/Ex_asp)            #Not sure about the 1/ part
+
+f_tree = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
+f_mat = np.pi/4 * d_hook**2 * sigma_yield
+f_max = min(f_tree, f_mat)                                  #Minimum sizing force
 
 # #Plotting
 # fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
