@@ -13,26 +13,26 @@ num = 100                   #Plotting variable
 #======================================================================
 
 # Hook Geometry
-l_hook = 0.02               #length of the hooks
-d_hook = 0.001              #diameter of the hooks
-n_hook = 120                #number of hooks
-R_tip = 20* 10**(-6)         #Radius of curvature of the spine
+l_hook = 0.02               # Length of the hooks [m]
+d_hook = 0.001              # Diameter of the hooks [m]
+n_hook = 120                # Number of hooks [-]
+R_tip = 20* 10**(-6)        # Radius of curvature of the spine [m]
 
 # Hook Material
-E_m = 200* 10**9             #Elastic modulus
-v_m = 0.29                  #Poisson's ratio
-sigma_yield = 290* 10**6
+E_m = 200* 10**9            # Elastic modulus [Pa]
+v_m = 0.29                  # Poisson's ratio [-]
+sigma_yield = 290* 10**6    # Yield strength [Pa]
 
 #=======================================================================
 # Spine Properties
 #=======================================================================
 
 # Spine Geometry
-l_spine = 0.2
-d_spine = 0.01
-alpha_spine = 20
-beta_spine = 10
-n_spine = 2
+l_spine = 0.2               # Length of the spine to cg [m]
+d_spine = 0.01              # Diameter of the spine [m]
+alpha_spine = 20            # Angle of the spine with respect to the symmetry plane [degrees]
+beta_spine = 10             # Angle of the spine with respect to the horizontal plane [degrees]
+n_spine = 2                 # Number of spines [-]
 
 # Spine Material
 ...
@@ -42,11 +42,11 @@ n_spine = 2
 #=======================================================================
 
 # Bumper Geometry
-l_bumper = 0.1
-d_bumper = 0.01
-alpha_bumper = 20
-beta_bumper = 10
-n_bumper = 2
+l_bumper = 0.1              # Length of the bumper to cg [m]
+d_bumper = 0.01             # Diameter of the bumper [m]
+alpha_bumper = 20           # Angle of the bumper with respect to the symmetry plane [degrees]
+beta_bumper = 10            # Angle of the bumper with respect to the horizontal plane [degrees]
+n_bumper = 2                # Number of bumpers [-]
 
 # Bumper Material
 ...
@@ -55,28 +55,28 @@ n_bumper = 2
 # Centre of Mass Properties
 #=======================================================================
 
-l_cg = 0.1
+l_cg = 0.1                  # Distance from the surface to the center of mass [m]
 
 #========================================================================
 # Loading Properties
 #========================================================================
 
-alpha = 1/12*np.pi          # load angle
+alpha = 15                  # Adhesion load angle [degrees]
 
 #=======================================================================
 # Tree Properties
 #=======================================================================
 
-mu_asp = 0.20               #Coefficient of friction
-Ex_asp = 9.8 *10**9         #Young's modulus in Pa
-v_asp = 0.4                 #Poisson's ratio   
+mu_asp = 0.20               # Coefficient of friction [-]
+Ex_asp = 9.8 *10**9         # Young's modulus [Pa]
+v_asp = 0.4                 # Poisson's ratio [-]
 
 #========================================================================
 # Bark Properties
 #========================================================================
 
-m = 2.7                     #mass of the bark in kg   
-W = m*9.81                #Weight of the bark in N
+m = 2.7                     # Mass of the bark [kg]
+W = m*9.81                  # Weight of the bark [N]
 
 #=======================================================================
 # Force Calculations
