@@ -104,7 +104,7 @@ F_max = min(F_tree, F_mat)                                              # Minimu
 fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
 
 theta = np.linspace(-np.deg2rad(alpha), np.arctan(mu_asp)+0.5*np.pi, num)
-r = [f_max]*num
+r = [F_max]*num
 ax.fill_between(theta, r, color='green', alpha=0.5)
 theta_upper = [np.arctan(mu_asp)+0.5*np.pi] * num
 r_upper = np.linspace(0, F_mat, num)
