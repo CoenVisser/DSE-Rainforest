@@ -1,6 +1,7 @@
 #Hooking Mechanism Force Plot
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
 
 #======================================================================
 # Plot parameters
@@ -52,20 +53,21 @@ n_bumper = 2                    # Number of bumpers [-]
 ...
 
 #=======================================================================
-# Centre of Mass Properties
+#Propeller Properties
 #=======================================================================
 
-l_cg = 0.1                      # Distance from the surface to the center of mass [m]
-
-#=======================================================================
-# Propeller Properties
-#=======================================================================
-c_prop = 0.50                   #Clearance of the propeller [%]
+c_prop = 0.50                   #Clearance of the propeller [-]
 d_prop = 0.25                   #Diameter of the propeller [m]
 l_prop = np.sqrt(2*(d_prop*(1+c_prop)))                       #Length of the propeller arm for double symmetric quadcopter[m]
 alpha_prop =   np.arctan(d_prop*(1+c_prop), d_prop*(1+c_prop))                 #Angle of the propeller with the symmetry plane [degrees]
 beta_prop =   0                  #Angle of the propeller with the horizontal plane [degrees]
-n_prop = 4                       #Number of propellers [-]
+n_prop = 4                       #Number of propellers [-]
+
+#=======================================================================
+# Centre of Mass Properties
+#=======================================================================
+
+l_cg = 0.1                      # Distance from the surface to the center of mass [m]
 
 #========================================================================
 # Loading Properties
@@ -88,46 +90,35 @@ v_asp = 0.4                     # Poisson's ratio [-]
 m = 2.7                         # Mass of the bark [kg]
 W = m*9.81                      # Weight of the bark [N]
 
-#=======================================================================
-# Force Calculations
-#=======================================================================
+x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper]
+args_obj = (beta_spine, beta_bumper)
+args_cst1 = (c_prop, d_prop)
 
-Fs = m*9.81/n_hook              # Tangential force per hook [N]
-Fnh = - m*9.81*(l_cg + l_spine*np.cos(np.deg2rad(alpha_spine))*np.sin(np.deg2rad(beta_spine)))/(l_spine*np.cos(np.deg2rad(alpha_spine))*np.cos(np.deg2rad(beta_spine)) + l_bumper*np.cos(np.deg2rad(alpha_bumper))*np.cos(np.deg2rad(beta_bumper)))/n_hook
-                                # Normal force per hook [N]
+def Fs(W, n_hook):
+    return W / n_hook
 
-F_tot = np.sqrt(Fs**2 + Fnh**2) # Total force per hook [N]
-gamma = np.arctan2(Fs, Fnh)     # Angle of the force vector with respect to the horizontal [radians]
+def Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook):
+    Fn = - W*(l_cg + l_spine*np.cos(np.deg2rad(alpha_spine))*np.sin(np.deg2rad(beta_spine)))/(l_spine*np.cos(np.deg2rad(alpha_spine))*np.cos(np.deg2rad(beta_spine)) + l_bumper*np.cos(np.deg2rad(alpha_bumper))*np.cos(np.deg2rad(beta_bumper)))/n_hook
+    return Fn
 
-sigma_max = 32*F_tot*l_hook*d_hook/(np.pi*d_hook**4)        # Maximum induced stress [Pa]
+def objective(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    beta_spine, beta_bumper = args
+    height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
+    width = np.maximum(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
+    return height * width
 
-E_tot = 1/((1-v_m**2)/E_m + (1-v_asp**2)/Ex_asp)            #Not sure about the 1/ part
+def constraint1(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    c_prop, d_prop = args
+    height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
+    min_height = (2+c_prop)*d_prop
+    return min_height - height
 
-F_tree = (np.pi*sigma_max/(1-2*v_asp))**3 * 9*R_tip**2/(2*E_tot**2)
-F_mat = np.pi/4 * d_hook**2 * sigma_yield
-F_max = min(F_tree, F_mat)                                  #Minimum sizing force
+def constraint2(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    c_prop, d_prop = args
+    width = np.maximum(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
+    min_width = (2+c_prop)*d_prop
+    return min_width - width
 
-F_actual = F_tot*10
-
-#Plotting
-#=======================================================================
-
-fig, ax = plt.subplots(subplot_kw={'projection':'polar'})
-
-theta = np.linspace(-np.deg2rad(alpha), np.arctan(mu_asp)+0.5*np.pi, num)
-r = [F_max]*num
-r_actual = [F_actual]*num
-ax.fill_between(theta, r, color='green', alpha=0.5)
-ax.plot(theta, r_actual, color='purple', alpha=0.5)
-
-theta_upper = [np.arctan(mu_asp)+0.5*np.pi] * num
-r_upper = np.linspace(0, F_max, num)
-ax.plot(theta_upper, r_upper, color='red')
-
-theta_lower = [-np.deg2rad(alpha)] * num
-r_lower = np.linspace(0, F_max, num)
-ax.plot(theta_lower, r_lower, color='blue')
-
-ax.grid(True)
-ax.set_title('Force Plot for Hooking Mechanism')
-plt.show()
