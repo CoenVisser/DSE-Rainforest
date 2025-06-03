@@ -20,9 +20,9 @@ n_hook = 30                # Number of hooks [-]
 R_tip = 20* 10**(-6)        # Radius of curvature of the spine [m]
 
 # Hook Material
-E_m = 200* 10**9                # Elastic modulus [Pa]
-v_m = 0.29                      # Poisson's ratio [-]
-sigma_yield = 290* 10**6        # Yield strength [Pa]
+E_hook = 200* 10**9                # Elastic modulus [Pa]
+v_hook = 0.29                      # Poisson's ratio [-]
+sigma_yield_hook = 290* 10**6        # Yield strength [Pa]
 
 #=======================================================================
 # Spine Properties
@@ -56,12 +56,12 @@ n_bumper = 2                    # Number of bumpers [-]
 #Propeller Properties
 #=======================================================================
 
-c_prop = 0.50                   #Clearance of the propeller [-]
-d_prop = 0.25                   #Diameter of the propeller [m]
-l_prop = np.sqrt(2*(d_prop*(1+c_prop)))                       #Length of the propeller arm for double symmetric quadcopter[m]
-alpha_prop =   np.arctan(d_prop*(1+c_prop), d_prop*(1+c_prop))                 #Angle of the propeller with the symmetry plane [degrees]
-beta_prop =   0                  #Angle of the propeller with the horizontal plane [degrees]
-n_prop = 4                       #Number of propellers [-]
+c_prop_h = 0.50                     # Horizontal clearance of the propeller [-]
+c_prop_v = 0.50                     # Vertical clearance of the propeller [-]
+d_prop = 0.25                       # Diameter of the propeller [m]
+alpha_prop = np.arctan2(d_prop*0.5*(1+c_prop_h), d_prop*0.5*(1+c_prop_v)) # Angle of the propeller with the symmetry plane [degrees]
+beta_prop =   0                     # Angle of the propeller with the horizontal plane [degrees]
+n_prop = 4                          # Number of propellers [-]
 
 #=======================================================================
 # Centre of Mass Properties
@@ -91,34 +91,90 @@ m = 2.7                         # Mass of the bark [kg]
 W = m*9.81                      # Weight of the bark [N]
 
 x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper]
+bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
 args_obj = (beta_spine, beta_bumper)
-args_cst1 = (c_prop, d_prop)
 
-def Fs(W, n_hook):
+def get_Fs(W, n_hook):
     return W / n_hook
 
-def Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook):
+def get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook):
     Fn = - W*(l_cg + l_spine*np.cos(np.deg2rad(alpha_spine))*np.sin(np.deg2rad(beta_spine)))/(l_spine*np.cos(np.deg2rad(alpha_spine))*np.cos(np.deg2rad(beta_spine)) + l_bumper*np.cos(np.deg2rad(alpha_bumper))*np.cos(np.deg2rad(beta_bumper)))/n_hook
     return Fn
+
+def get_Fmax(v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree):
+    E_tot = 1/((1-v_hook**2)/E_hook + (1-v_tree**2)/E_tree)            #Not sure about the 1/ part
+
+    F_max = (np.pi*sigma_yield_hook/(1-2*v_tree))**3 * 9*R_tip**2/(2*E_tot**2)
+    # todo: asperity failing
+    return F_max
 
 def objective(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper = x
     beta_spine, beta_bumper = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
-    width = np.maximum(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
+    width = max(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
     return height * width
+
+args1 = (c_prop_v, d_prop, beta_spine, beta_bumper)
 
 def constraint1(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper = x
-    c_prop, d_prop = args
+    c_prop_v, d_prop, beta_spine, beta_bumper = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
-    min_height = (2+c_prop)*d_prop
-    return min_height - height
+    min_height = (2+c_prop_v)*d_prop
+    return height - min_height
+
+args2 = (c_prop_h, d_prop, beta_spine, beta_bumper)
 
 def constraint2(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper = x
-    c_prop, d_prop = args
+    c_prop_h, d_prop, beta_spine, beta_bumper = args
     width = np.maximum(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
-    min_width = (2+c_prop)*d_prop
-    return min_width - width
+    min_width = (2+c_prop_h)*d_prop
+    return width - min_width
 
+args3 = (W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_asp, Ex_asp, n_hook)
+
+def constraint3(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    W, l_cg, beta_spine, beta_bumper, v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree, n_hook = args
+    Fs = 10*get_Fs(W, n_hook)
+    Fn = 10*get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
+    F_tot = np.sqrt(Fs**2 + Fn**2)
+    F_max = get_Fmax(v_hook, E_hook, sigma_yield_hook, R_tip, v_tree, E_tree)
+    return F_max - F_tot
+
+args4 = (W, l_cg, beta_spine, beta_bumper, mu_asp, n_hook)
+
+def constraint4(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    W, l_cg, beta_spine, beta_bumper, mu_tree, n_hook = args
+    Fs = get_Fs(W, n_hook)
+    Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
+    return mu_tree + Fs/Fn
+
+args5 = (W, l_cg, beta_spine, beta_bumper, alpha, n_hook)
+
+def constraint5(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper = x
+    W, l_cg, beta_spine, beta_bumper, alpha, n_hook= args
+    Fs = get_Fs(W, n_hook)
+    Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
+    return np.deg2rad(alpha) + Fn/Fs
+
+constraints = [
+    {'type': 'ineq', 'fun': lambda x: constraint1(x, args1)},
+    {'type': 'ineq', 'fun': lambda x: constraint2(x, args2)},
+    {'type': 'ineq', 'fun': lambda x: constraint3(x, args3)},
+    {'type': 'ineq', 'fun': lambda x: constraint4(x, args4)},
+    {'type': 'ineq', 'fun': lambda x: constraint5(x, args5)}
+]
+
+def optimize_hook(x0, args, bounds, constraints):
+    result = minimize(lambda x: objective(x, args), x0, bounds=bounds, constraints=constraints, method='SLSQP', options={'disp': True})
+    return result
+
+if __name__ == "__main__":
+    result = optimize_hook(x0, args_obj, bounds, constraints)
+    print(result.message)
+    print("Optimized parameters:", result.x)
