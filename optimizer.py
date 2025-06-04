@@ -17,14 +17,16 @@ num = 1000                   #Plotting variable
 l_hook = 0.023                          # Length of the hooks [m]
 d_hook = 1* 10**(-3)                    # Diameter of the hooks [m]
 n_hook = 30                             # Number of hooks [-]
-R_tip = 20* 10**(-6)                    # Radius of curvature of the spine [m]
-m_hook = 0.127 * 10**(-3)               # Mass of the hook [kg]
+R_tip = 25* 10**(-6)                    # Radius of curvature of the spine [m]
+
 
 # Hook Material 
 E_hook = 200* 10**9                # Elastic modulus [Pa]
 v_hook = 0.29                      # Poisson's ratio [-]
 sigma_yield_hook = 290* 10**6        # Yield strength [Pa]
 density_hook = 7000
+
+m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
 
 #=======================================================================
 # Spine Properties
@@ -60,7 +62,7 @@ density_bumper = 920                # Density [kg/m^3]
 
 c_prop_h = 0.33                     # Horizontal clearance of the propeller [-]
 c_prop_v = 0.33                     # Vertical clearance of the propeller [-]
-d_prop = 0.20                       # Diameter of the propeller [m]
+d_prop = 0.25                       # Diameter of the propeller [m]
 alpha_prop = np.arctan2(d_prop*0.5*(1+c_prop_h), d_prop*0.5*(1+c_prop_v))   # Angle of the propeller with the symmetry plane [degrees]
 beta_prop =   0                                                             # Angle of the propeller with the horizontal plane [degrees]
 n_prop = 4                          # Number of propellers [-]
@@ -90,12 +92,12 @@ sigma_yield_tree = 150*10**6
 # Bark Properties
 #========================================================================
 
-m = 2.7                         # Mass of the bark [kg]
+m = 2.4                         # Mass of the bark [kg]
 W = m*9.81                      # Weight of the bark [N]
 
 x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
 bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90), (1, 400), (0.01, 0.10), (0, 45), (0, 45)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
-args_obj = (d_spine, d_bumper, m_hook, density_spine, density_bumper)
+args_obj = (d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper)
 
 def get_Fs(W, n_hook):
     return W / n_hook
@@ -113,14 +115,23 @@ def get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree):
 def get_Smax(F_tot, l, d):
     return 32*F_tot*l*d/(np.pi*d**4)
 
-def objective(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
-    d_spine, d_bumper, m_hook, density_spine, density_bumper = args
+def get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper):
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
     width = max(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
-    area = height * width
-    mass = 2*l_spine*(np.pi*(d_spine/2)**2)*density_spine + 2*l_bumper*(np.pi*(d_bumper/2)**2)*density_bumper + 4*n_hook*m_hook
-    w_area = 1
+    return height * width
+
+def get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper):
+    mass_spine = n_spine*l_spine*(np.pi*(d_spine/2)**2)*density_spine
+    mass_bumper = n_bumper*l_bumper*(np.pi*(d_bumper/2)**2)*density_bumper
+    mass_hook = 4*n_hook*m_hook
+    return mass_spine+mass_bumper+mass_hook, mass_spine, mass_bumper, mass_hook
+
+def objective(x, args):
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
+    d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper = args
+    area = get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper)
+    mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
+    w_area = 0.5
     w_mass = 1 - w_area
     return w_area * area + w_mass * mass
 
@@ -154,8 +165,8 @@ args3 = (W, v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree)
 def constraint3(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     W, v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree = args
-    Fs = 2*get_Fs(W, n_hook)
-    Fn = 2*get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
+    Fs = get_Fs(W, n_hook)
+    Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
     F_tot = np.sqrt(Fs**2 + Fn**2)
     F_max = get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree)
     return F_max - F_tot
@@ -213,9 +224,25 @@ def optimize_hook(x0, args, bounds, constraints):
 if __name__ == "__main__":
     result = optimize_hook(x0, args_obj, bounds, constraints)
     print(result.message)
-    print("Optimized parameters:", result.x)
+    print("Optimized parameters:")
+    print(f"l_spine: {result.x[0]:.4f} m")
+    print(f"alpha_spine: {result.x[1]:.4f} degrees")
+    print(f"l_bumper: {result.x[2]:.4f} m")
+    print(f"alpha_bumper: {result.x[3]:.4f} degrees")
+    print(f"n_hook: {result.x[4]:.4f} hooks")
+    print(f"l_cg: {result.x[5]:.4f} m")
+    print(f"beta_spine: {result.x[6]:.4f} degrees")
+    print(f"beta_bumper: {result.x[7]:.4f} degrees")
 
-    print(get_Fs(W, result.x[4]))
-    print(get_Fn(result.x[5], result.x[0], result.x[2], result.x[1], result.x[6], result.x[3], result.x[7], W, result.x[4]))
+    # print("Calculated Forces:")
+    # print(f"Fs: {get_Fs(W, result.x[4]):.4f} N")
+    # print(f"Fn: {get_Fn(result.x[5], result.x[0], result.x[2], result.x[1], result.x[6], result.x[3], result.x[7], W, result.x[4]):.4f} N")
+    # print(f"F_max: {get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree):.4f} N")
+
+    print(f"Area: {get_area(result.x[0], result.x[1], result.x[2], result.x[3], result.x[6], result.x[7]):.4f} m^2")
+    print(f"Mass: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[0]:.4f} kg")
+    print(f"Mass of spine: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[1]:.4f} kg")
+    print(f"Mass of bumper: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[2]:.4f} kg")
+    print(f"Mass of hooks: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[3]:.4f} kg")
 
 #todo: include bending stress --> sigma_max < sigma_yield_hook
