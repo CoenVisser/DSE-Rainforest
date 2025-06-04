@@ -14,15 +14,17 @@ num = 1000                   #Plotting variable
 #======================================================================
 
 # Hook Geometry
-l_hook = 0.023               # Length of the hooks [m]
-d_hook = 0.254* 10**(-3)              # Diameter of the hooks [m]
-n_hook = 30                # Number of hooks [-]
-R_tip = 20* 10**(-6)        # Radius of curvature of the spine [m]
+l_hook = 0.023                          # Length of the hooks [m]
+d_hook = 1* 10**(-3)                    # Diameter of the hooks [m]
+n_hook = 30                             # Number of hooks [-]
+R_tip = 20* 10**(-6)                    # Radius of curvature of the spine [m]
+m_hook = 0.127 * 10**(-3)               # Mass of the hook [kg]
 
 # Hook Material 
 E_hook = 200* 10**9                # Elastic modulus [Pa]
 v_hook = 0.29                      # Poisson's ratio [-]
 sigma_yield_hook = 290* 10**6        # Yield strength [Pa]
+density_hook = 7000
 
 #=======================================================================
 # Spine Properties
