@@ -18,6 +18,7 @@ l_hook = 0.023               # Length of the hooks [m]
 d_hook = 0.254* 10**(-3)              # Diameter of the hooks [m]
 n_hook = 30                # Number of hooks [-]
 R_tip = 20* 10**(-6)        # Radius of curvature of the spine [m]
+m_hook = ...            # Mass of the hook [kg]
 
 # Hook Material 
 E_hook = 200* 10**9                # Elastic modulus [Pa]
@@ -93,7 +94,7 @@ W = m*9.81                      # Weight of the bark [N]
 
 x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
 bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90), (1, 60), (0.01, 0.10), (0, 45), (0, 45)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
-args_obj = ()
+args_obj = (d_spine, d_bumper, m_hook)
 
 def get_Fs(W, n_hook):
     return W / n_hook
@@ -113,9 +114,14 @@ def get_Smax(F_tot, l, d):
 
 def objective(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
+    d_spine, d_bumper, m_hook = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
     width = max(l_spine*np.sin(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)), l_bumper*np.sin(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper)))
-    return height * width
+    area = height * width
+    mass = 2*l_spine*(np.pi*(d_spine/2)**2) + 2*l_bumper*(np.pi*(d_bumper/2)**2) + 4*n_hook*m_hook
+    w_area = 0.5
+    w_mass = 0.5
+    return w_area * area + w_mass * mass
 
 args1 = (c_prop_v, d_prop)
 
