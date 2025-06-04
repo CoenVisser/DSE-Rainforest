@@ -16,8 +16,8 @@ num = 1000                   #Plotting variable
 # Hook Geometry
 l_hook = 0.023                          # Length of the hooks [m]
 d_hook = 1* 10**(-3)                    # Diameter of the hooks [m]
-n_hook = 30                             # Number of hooks [-]
-R_tip = 25* 10**(-6)                    # Radius of curvature of the spine [m]
+n_hook = 60                             # Number of hooks [-]
+R_tip = 20* 10**(-6)                    # Radius of curvature of the spine [m]
 
 
 # Hook Material 
@@ -36,7 +36,7 @@ m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
 l_spine = 0.7                   # Length of the spine to cg [m]
 d_spine = 0.01                  # Diameter of the spine [m]
 alpha_spine = 20                # Angle of the spine with respect to the symmetry plane [degrees]
-beta_spine = 0                 # Angle of the spine with respect to the horizontal plane [degrees]
+beta_spine = 20                 # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                     # Number of spines [-]
 
 # Spine Material - Flax Fibers
@@ -47,10 +47,10 @@ density_spine = 1500
 #=======================================================================
 
 # Bumper Geometry
-l_bumper = 0.1                      # Length of the bumper to cg [m]
+l_bumper = 0.7                      # Length of the bumper to cg [m]
 d_bumper = 0.01                     # Diameter of the bumper [m]
 alpha_bumper = 20                   # Angle of the bumper with respect to the symmetry plane [degrees]
-beta_bumper = 0                     # Angle of the bumper with respect to the horizontal plane [degrees]
+beta_bumper = 20                     # Angle of the bumper with respect to the horizontal plane [degrees]
 n_bumper = 2                        # Number of bumpers [-]
 
 # Bumper Material
@@ -92,12 +92,10 @@ sigma_yield_tree = 150*10**6
 # Bark Properties
 #========================================================================
 
-m = 2.4                         # Mass of the bark [kg]
+m = 2.1                         # Mass of the bark [kg]
 W = m*9.81                      # Weight of the bark [N]
 
-x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
-bounds = [(0.01, 1.0), (0, 90), (0.01, 1.0), (0, 90), (1, 400), (0.01, 0.10), (0, 45), (0, 45)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
-args_obj = (d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper)
+
 
 def get_Fs(W, n_hook):
     return W / n_hook
@@ -126,14 +124,24 @@ def get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper
     mass_hook = 4*n_hook*m_hook
     return mass_spine+mass_bumper+mass_hook, mass_spine, mass_bumper, mass_hook
 
+initial_mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
+initial_area = get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper)
+
+print(f"Initial mass: {initial_mass:.4f} kg")
+print(f"Initial area: {initial_area:.4f} m^2")
+
+x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
+bounds = [(0.01, 1.0), (0, 45), (0.01, 1.0), (0, 45), (1, 400), (0.01, 0.10), (0, 45), (0, 45)]  # Bounds for l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook
+args_obj = (d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper, initial_mass, initial_area)
+
 def objective(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
-    d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper = args
+    d_spine, d_bumper, m_hook, density_spine, density_bumper, n_spine, n_bumper, initial_mass, initial_area = args
     area = get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper)
     mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
     w_area = 0.5
     w_mass = 1 - w_area
-    return w_area * area + w_mass * mass
+    return w_area * area/initial_area + w_mass * mass/initial_mass
 
 args1 = (c_prop_v, d_prop)
 
@@ -189,7 +197,7 @@ def constraint5(x, args):
     W, alpha = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
-    return np.deg2rad(alpha) + Fn/Fs
+    return np.deg2rad(alpha) + Fn/(Fs + 1e-8)
 
 args6 = ()
 
@@ -208,7 +216,7 @@ def constraint7(x, args):
 
 constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint1a(x, args1)},
-    {'type': 'ineq', 'fun': lambda x: constraint1b(x, args1)},
+    # {'type': 'ineq', 'fun': lambda x: constraint1b(x, args1)},
     {'type': 'ineq', 'fun': lambda x: constraint2(x, args2)},
     {'type': 'ineq', 'fun': lambda x: constraint3(x, args3)},
     {'type': 'ineq', 'fun': lambda x: constraint4(x, args4)},
