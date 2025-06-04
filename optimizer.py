@@ -37,22 +37,22 @@ alpha_spine = 20                # Angle of the spine with respect to the symmetr
 beta_spine = 0                 # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                     # Number of spines [-]
 
-# Spine Material
-...
+# Spine Material - Flax Fibers
+density_spine = 1500
 
 #=======================================================================
 # Bumper Properties
 #=======================================================================
 
 # Bumper Geometry
-l_bumper = 0.1                  # Length of the bumper to cg [m]
-d_bumper = 0.01                 # Diameter of the bumper [m]
-alpha_bumper = 20               # Angle of the bumper with respect to the symmetry plane [degrees]
-beta_bumper = 0                # Angle of the bumper with respect to the horizontal plane [degrees]
-n_bumper = 2                    # Number of bumpers [-]
+l_bumper = 0.1                      # Length of the bumper to cg [m]
+d_bumper = 0.01                     # Diameter of the bumper [m]
+alpha_bumper = 20                   # Angle of the bumper with respect to the symmetry plane [degrees]
+beta_bumper = 0                     # Angle of the bumper with respect to the horizontal plane [degrees]
+n_bumper = 2                        # Number of bumpers [-]
 
 # Bumper Material
-...
+density_bumper = 920                # Density [kg/m^3] 
 
 #=======================================================================
 #Propeller Properties
