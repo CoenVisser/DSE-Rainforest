@@ -178,3 +178,5 @@ if __name__ == "__main__":
     result = optimize_hook(x0, args_obj, bounds, constraints)
     print(result.message)
     print("Optimized parameters:", result.x)
+
+#todo: include bending stress --> sigma_max < sigma_yield_hook
