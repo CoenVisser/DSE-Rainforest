@@ -31,10 +31,10 @@ density_spine = 1500
 sigma_yield_spine = 280*10**6           # Yield strength [Pa]
 
 # Spine Geometry
-l_spine = 0.7                           # Length of the spine to cg [m]
-d_spine = 0.01                          # Diameter of the spine [m]
+l_spine = 0.3                           # Length of the spine to cg [m]
+d_spine = 0.05                          # Diameter of the spine [m]
 alpha_spine = 20                        # Angle of the spine with respect to the symmetry plane [degrees]
-beta_spine = 20                         # Angle of the spine with respect to the horizontal plane [degrees]
+beta_spine = 10                         # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                             # Number of spines [-]
 spacing_spine = 0.15                    # Spacing between 2 spines [m]
 
@@ -48,10 +48,10 @@ density_bumper = 1500                    # Density [kg/m^3]
 sigma_yield_bumper = 280*10**6           # Yield strength [Pa]
 
 # Bumper Geometry
-l_bumper = 0.7                          # Length of the bumper to cg [m]
-d_bumper = 0.01                         # Diameter of the bumper [m]
+l_bumper = 0.3                          # Length of the bumper to cg [m]
+d_bumper = 0.05                         # Diameter of the bumper [m]
 alpha_bumper = 20                       # Angle of the bumper with respect to the symmetry plane [degrees]
-beta_bumper = 20                        # Angle of the bumper with respect to the horizontal plane [degrees]
+beta_bumper = 10                        # Angle of the bumper with respect to the horizontal plane [degrees]
 n_bumper = 2                            # Number of bumpers [-]
 spacing_bumper = 0.1                    # Spacing between 2 bumpers [m]
 
@@ -134,7 +134,7 @@ def get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper
 x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper]
 
 # Bounds for the parameters
-bounds = [(0.01, 1.0), (0, 45), (0.01, 1.0), (0, 45), (1, 400), (0.01, 0.10), (0, 45), (0, 45), (0.01, 0.1), (0.01, 0.1)]
+bounds = [(0.01, 0.5), (5, 30), (0.01, 0.5), (5, 30), (1, 65), (0.03, 0.10), (0, 45), (0, 45), (0.005, 0.1), (0.005, 0.1)]
 
 # Initial mass and area calculations
 initial_mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
