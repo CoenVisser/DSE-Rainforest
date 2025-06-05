@@ -131,10 +131,10 @@ def get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper
 #========================================================================
 
 # Initial parameters - parameters to be optimized
-x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper]
+x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
 
 # Bounds for the parameters
-bounds = [(0.01, 1.0), (0, 45), (0.01, 1.0), (0, 45), (1, 400), (0.01, 0.10), (0, 45), (0, 45), (0.001, 0.1), (0.001, 0.1)]
+bounds = [(0.01, 1.0), (0, 45), (0.01, 1.0), (0, 45), (1, 400), (0.01, 0.10), (0, 45), (0, 45)]
 
 # Initial mass and area calculations
 initial_mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
@@ -165,7 +165,7 @@ args13 = (m_hook, n_spine, E_spine)
 
 # Objective function to minimize: weighted sum of area and mass
 def objective(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     m_hook, density_spine, density_bumper, n_spine, n_bumper, initial_mass, initial_area = args
     area = get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper)
     mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]
@@ -175,7 +175,7 @@ def objective(x, args):
 
 # Height of the spine must be greater than the properller
 def constraint1(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     c_prop_v, d_prop = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine))
     min_height = (1+c_prop_v/2)*d_prop
@@ -183,7 +183,7 @@ def constraint1(x, args):
 
 # Height of the bumper must be greater than the properller
 def constraint2(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     c_prop_v, d_prop = args
     height = l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
     min_height = (1+c_prop_v/2)*d_prop
@@ -191,7 +191,7 @@ def constraint2(x, args):
 
 # Force must be less than the maximum force that the tree can withstand
 def constraint3(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     W, v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
@@ -201,7 +201,7 @@ def constraint3(x, args):
 
 # Stress in the hook must be less than the yield strength of the hook material
 def constraint4(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     W, sigma_yield_hook, l_hook, d_hook = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
@@ -211,7 +211,7 @@ def constraint4(x, args):
 
 # Contact angle of the hooks must be greater than the adhesion angle
 def constraint5(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     W, alpha = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
@@ -219,48 +219,48 @@ def constraint5(x, args):
 
 # Bumper and spine must be aligned in the horizontal plane
 def constraint6(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     return l_spine*np.sin(np.radians(beta_spine)) - l_bumper*np.sin(np.radians(beta_bumper))
 
 # Beta_spine must be at least 10 degrees more than beta_propeller
 def constraint7(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     beta_prop = args
     return beta_spine - 10 - beta_prop
 
 # Beta_bumper must be at least 10 degrees more than beta_propeller
 def constraint8(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     beta_prop = args
     return beta_bumper - 10 - beta_prop
 
 # The spacing between the spines must be spacing_spine
 def constraint9(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     spacing_spine = args
     spacing = 2 * l_spine * np.sin(np.radians(alpha_spine)) * np.cos(np.radians(beta_spine))
     return spacing - spacing_spine
 
 # The spacing between the bumpers must be spacing_bumper
 def constraint10(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     spacing_bumper = args
     spacing = 2 * l_bumper * np.sin(np.radians(alpha_bumper)) * np.cos(np.radians(beta_bumper))
     return spacing - spacing_bumper
 
 # Stress in the spine must be less than the yield strength of the spine material
 def constraint11(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     W, sigma_yield_spine, n_spine = args
     Fs = get_Fs(W, n_hook)
     Fn = get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook)
-    F_tot = np.sqrt(Fs**2 + Fn**2)*n_spine
+    F_tot = np.sqrt(Fs**2 + Fn**2)*n_hook/ n_spine
     S = F_tot/(np.pi * (d_spine/2)**2)
     return sigma_yield_spine - S
 
 # The bumper must not buckle under a 1g load
 def constraint12(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     E_bumper, m = args
     amoi_bumper = np.pi/4*(d_bumper/4)**4 
     Fbuck = 2.04*np.pi**2*E_bumper*amoi_bumper/(l_bumper**2)
@@ -268,7 +268,7 @@ def constraint12(x, args):
 
 # The spines must not deflect too much under the weight of the hooks
 def constraint13(x, args):
-    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
+    l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     m_hook, n_spine, E_spine = args
     m_hooks = 4*n_hook*m_hook
     m_hooks_per_spine = m_hooks / n_spine
@@ -288,9 +288,9 @@ constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint8(x, args8)},
     {'type': 'eq', 'fun': lambda x: constraint9(x, args9)},
     {'type': 'eq', 'fun': lambda x: constraint10(x, args10)},
-    {'type': 'ineq', 'fun': lambda x: constraint11(x, args11)},
-    {'type': 'ineq', 'fun': lambda x: constraint12(x, args12)},
-    {'type': 'ineq', 'fun': lambda x: constraint13(x, args13)},
+    # {'type': 'ineq', 'fun': lambda x: constraint11(x, args11)},
+    # {'type': 'ineq', 'fun': lambda x: constraint12(x, args12)},
+    # {'type': 'ineq', 'fun': lambda x: constraint13(x, args13)},
 ]
 
 def optimize_hook(x0, args, bounds, constraints):
