@@ -318,9 +318,9 @@ if __name__ == "__main__":
     # print(f"F_max: {get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree):.4f} N")
 
     print(f"Area: {get_area(result.x[0], result.x[1], result.x[2], result.x[3], result.x[6], result.x[7]):.4f} m^2")
-    print(f"Mass: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[0]:.4f} kg")
-    print(f"Mass of spine: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[1]:.4f} kg")
-    print(f"Mass of bumper: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[2]:.4f} kg")
-    print(f"Mass of hooks: {get_mass(result.x[0], d_spine, density_spine, result.x[2], d_bumper, density_bumper, result.x[4], m_hook, n_spine, n_bumper)[3]:.4f} kg")
+    print(f"Mass: {get_mass(result.x[0], result.x[8], density_spine, result.x[2], result.x[9], density_bumper, result.x[4], m_hook, n_spine, n_bumper)[0]:.4f} kg")
+    print(f"Mass of spine: {get_mass(result.x[0], result.x[8], density_spine, result.x[2], result.x[9], density_bumper, result.x[4], m_hook, n_spine, n_bumper)[1]:.4f} kg")
+    print(f"Mass of bumper: {get_mass(result.x[0], result.x[8], density_spine, result.x[2], result.x[9], density_bumper, result.x[4], m_hook, n_spine, n_bumper)[2]:.4f} kg")
+    print(f"Mass of hooks: {get_mass(result.x[0], result.x[8], density_spine, result.x[2], result.x[9], density_bumper, result.x[4], m_hook, n_spine, n_bumper)[3]:.4f} kg")
 
 #todo: include bending stress --> sigma_max < sigma_yield_hook

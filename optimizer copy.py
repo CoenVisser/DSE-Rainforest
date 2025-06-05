@@ -262,7 +262,7 @@ def constraint11(x, args):
 def constraint12(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper = x
     E_bumper, m = args
-    amoi_bumper = np.pi/4*(d_bumper/4)**4 
+    amoi_bumper = np.pi/4*(d_bumper/2)**4 
     Fbuck = 2.04*np.pi**2*E_bumper*amoi_bumper/(l_bumper**2)
     return Fbuck - m*9.81
 
