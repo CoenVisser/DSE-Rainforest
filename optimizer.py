@@ -98,7 +98,8 @@ W = m*9.81                              # Weight of the bark [N]
 #========================================================================
 # Relevant Margins
 #========================================================================
-spacing_beta = 0.10
+spacing_beta_spine = 10
+spacing_beta_bumper = 10
 c_prop_v_outer = 0.10
 c_prop_h_outer = 0.10
 n_load = 2
@@ -118,7 +119,7 @@ def get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_
     return Fn
 
 def get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree):
-    E_tot = 1/((1-v_hook**2)/E_hook + (1-v_tree**2)/E_tree)            #Not sure about the 1/ part
+    E_tot = 1/((1-v_hook**2)/E_hook + (1-v_tree**2)/E_tree)
     F_max = (np.pi*sigma_yield_tree/(1-2*v_tree))**3 * 9*R_tip**2/(2*E_tot**2)
     return F_max
 
@@ -155,14 +156,14 @@ print(f"Initial area: {initial_area:.4f} m^2")
 
 # Arguments for the objective function and constraints
 args_obj = (m_hook, density_spine, density_bumper, n_spine, n_bumper, initial_mass, initial_area)
-args1 = (c_prop_v, d_prop)
-args2 = (c_prop_h, d_prop)
+args1 = (c_prop_v, c_prop_v_outer, d_prop)
+args2 = (c_prop_v,c_prop_v_outer, d_prop)
 args3 = (W, v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree)
 args4 = (W, sigma_yield_hook, l_hook, d_hook)
 args5 = (W, alpha)
 args6 = ()
-args7 = (beta_prop)
-args8 = (beta_prop)
+args7 = (beta_prop, spacing_beta_spine)
+args8 = (beta_prop, spacing_beta_bumper)
 args9 = (spacing_spine)
 args10 = (spacing_bumper)
 args11 = (W, sigma_yield_spine, n_spine)
@@ -186,17 +187,17 @@ def objective(x, args):
 # Height of the spine must be greater than the properller
 def constraint1(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
-    c_prop_v, d_prop = args
+    c_prop_v, c_prop_v_outer, d_prop = args
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine))
-    min_height = (1+c_prop_v/2)*d_prop
+    min_height = (1+c_prop_v/2+c_prop_v_outer/2)*d_prop
     return height - min_height
 
 # Height of the bumper must be greater than the properller
 def constraint2(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
-    c_prop_v, d_prop = args
+    c_prop_v, c_prop_v_outer, d_prop = args
     height = l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
-    min_height = (1+c_prop_v/2)*d_prop
+    min_height = (1+c_prop_v/2+c_prop_v_outer/2)*d_prop
     return height - min_height
 
 # Force must be less than the maximum force that the tree can withstand
@@ -235,14 +236,14 @@ def constraint6(x, args):
 # Beta_spine must be at least 10 degrees more than beta_propeller
 def constraint7(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
-    beta_prop = args
-    return beta_spine - 10 - beta_prop
+    beta_prop, spacing_beta_spine = args
+    return beta_spine - spacing_beta_spine - beta_prop
 
 # Beta_bumper must be at least 10 degrees more than beta_propeller
 def constraint8(x, args):
     l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper, d_spine, d_bumper = x
-    beta_prop = args
-    return beta_bumper - 10 - beta_prop
+    beta_prop, spacing_beta_bumper = args
+    return beta_bumper - spacing_beta_bumper - beta_prop
 
 # The spacing between the spines must be spacing_spine
 def constraint9(x, args):
