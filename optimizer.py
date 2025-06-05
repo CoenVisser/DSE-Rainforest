@@ -95,6 +95,16 @@ sigma_yield_tree = 150*10**6            # Yield strength [Pa]
 m = 2.7                                 # Mass of the bark [kg]
 W = m*9.81                              # Weight of the bark [N]
 
+#========================================================================
+# Relevant Margins
+#========================================================================
+spacing_beta = 0.10
+c_prop_v_outer = 0.10
+c_prop_h_outer = 0.10
+n_load = 2
+sf_forces = 2
+sf_design = 1.5
+
 
 #========================================================================
 # Functions
