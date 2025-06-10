@@ -31,7 +31,7 @@ m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
 #=======================================================================
 
 # Spine Material - Flax Fibers
-E_spine = 20*10**9                      # Elastic modulus [Pa]
+E_spine = 40*10**9                      # Elastic modulus [Pa]
 density_spine = 1500
 sigma_yield_spine = 280*10**6           # Yield strength [Pa]
 
@@ -48,7 +48,7 @@ spacing_spine = 0.15                    # Spacing between 2 spines [m]
 #=======================================================================
 
 # Bumper Material - Flax Fibers
-E_bumper = 70*10**9                      # Elastic modulus [Pa]
+E_bumper = 40*10**9                      # Elastic modulus [Pa]
 density_bumper = 1500                    # Density [kg/m^3] 
 sigma_yield_bumper = 280*10**6           # Yield strength [Pa]
 

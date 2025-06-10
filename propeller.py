@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 #=======================================================
 
 # Propeller Arm Properties
-E_arm = 20*10**9
+E_arm = 40*10**9
 density_arm = 1400
 sigma_yield_arm = 280*10**6
 
@@ -31,10 +31,14 @@ n_prop = 4
 #========================================================
 # Sizing Parameters
 #========================================================
-min_thickness = 0.005
+min_thickness = 0.0025
 min_clearance = 0.0875
 min_prop_clearance = 0.10 #%
 n_buckling = 0.25
+sf_forces = 2
+sf_design = 1.25
+
+thrust_loss = 0.03 #Amount of thrust that may be lost due to arm deflection
 
 #Use Platform Parameters for prop clearance
 #w_box
@@ -45,7 +49,7 @@ n_buckling = 0.25
 #=======================================================
 
 m = 2.7
-W = m*9.81
+W = m*9.81*sf_design
 thrust_to_weight_ratio = 2
 
 #=======================================================
@@ -54,11 +58,11 @@ thrust_to_weight_ratio = 2
 #The weight of the propulsion system at each arm is neglected
 def get_max_shear(W, thrust_to_weight_ratio, n_prop):
     F_shear = W*thrust_to_weight_ratio/n_prop
-    return F_shear
+    return sf_forces*F_shear
 
 def get_max_normal_force(W, thrust_to_weight_ratio, n_prop):
     F_normal = W*(thrust_to_weight_ratio - 1)/n_prop
-    return F_normal
+    return sf_forces*F_normal
 
 def get_max_bending_moment(F_shear, l_arm):
     M_bending = F_shear * l_arm
@@ -118,6 +122,9 @@ args3 =     (W, thrust_to_weight_ratio)
 args4 =     (min_clearance)
 args5 =     (min_thickness)
 args6 =     (min_prop_clearance)
+args7 =     (min_prop_clearance)
+args8 =     (E_arm, thrust_loss, W, thrust_to_weight_ratio)
+args10 =    (W, thrust_to_weight_ratio)
 
 
 def objective(x, args):
@@ -172,7 +179,7 @@ def constraint5(x, args):
     t = d_arm_outer - d_arm_inner
     return t - min_thickness
 
-#Propellers should not touch
+#Propellers should not touch in y-direction
 def constraint6(x, args):
     l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
     min_prop_clearance = args
@@ -181,6 +188,43 @@ def constraint6(x, args):
     y_arm = l_arm * np.sin(np.deg2rad(alpha_arm))
     return y_arm - min_distance
 
+#Propeller should not touch in x-direction
+def constraint7(x, args):
+    l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
+    min_prop_clearance = args
+    prop_radius = d_prop / 2
+    min_distance = prop_radius*(1 + min_prop_clearance) #Already includes half for one side
+    x_arm = l_arm * np.cos(np.deg2rad(alpha_arm))
+    return x_arm - min_distance
+
+#Deflection
+def constraint8(x, args):
+    l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
+    E_arm, thrust_loss, W, thrust_to_weight_ratio = args
+    max_angle_deflection = np.arctan([np.sqrt(1-(1-thrust_loss)**2)/(1-thrust_loss)])
+    print(max_angle_deflection)
+    F_shear = get_max_shear(W, thrust_to_weight_ratio, n_prop)
+    I = np.pi * (d_arm_outer**4 - d_arm_inner**4) / 64
+    theta = F_shear*l_arm**2 /(2*E_arm*I)
+    return max_angle_deflection - theta  # Ensure deflection is within limits
+
+#Principal stress
+def constraint10(x, args):
+    l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
+    W, thrust_to_weight_ratio = args
+    F_normal = get_max_normal_force(W, thrust_to_weight_ratio, n_prop)
+    sigma_normal = get_max_normal_stress(F_normal, d_arm_outer, d_arm_inner)
+    M_bending = get_max_bending_moment(F_normal, l_arm)
+    sigma_bending = get_max_bending_stress(M_bending, d_arm_outer, d_arm_inner)
+    sigma_max = sigma_normal + sigma_bending
+    F_shear = get_max_shear(W, thrust_to_weight_ratio, n_prop)
+    tau_bending = get_max_shear_stress_bending(F_shear, d_arm_outer, d_arm_inner)
+    T_torsion = get_torsion_moment(F_shear, l_arm, alpha_arm)
+    tau_torsion = get_max_shear_stress_torsion(T_torsion, d_arm_outer, d_arm_inner)
+    tau_max = tau_bending + tau_torsion
+    # Calculate Von Mises stress
+    sigma_principal = sigma_max/2 + np.sqrt((sigma_max/2)**2 + tau_max**2)
+    return sigma_yield_arm - sigma_principal
 
 constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint1(x, args1)},
@@ -188,7 +232,10 @@ constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint3(x, args1)},
     {'type': 'ineq', 'fun': lambda x: constraint4(x, args4)},
     {'type': 'ineq', 'fun': lambda x: constraint5(x, args5)},
-    {'type': 'ineq', 'fun': lambda x: constraint6(x, args6)}
+    {'type': 'ineq', 'fun': lambda x: constraint6(x, args6)},
+    {'type': 'ineq', 'fun': lambda x: constraint7(x, args6)},
+    {'type': 'ineq', 'fun': lambda x: constraint8(x, args8)},
+    {'type': 'ineq', 'fun': lambda x: constraint10(x, args1)}
     ]
 
 def optimize_propeller(x0, args, bounds, constraints):
@@ -203,3 +250,5 @@ if __name__ =="__main__":
         print("Minimum mass:", result.fun)
     else:
         print("Optimization failed:", result.message)
+
+#Look into Von Mises stress
