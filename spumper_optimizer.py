@@ -67,7 +67,7 @@ spacing_bumper = 0.1                    # Spacing between 2 bumpers [m]
 # Propeller Geometry
 c_prop_h = 0.33                         # Horizontal clearance of the propeller [-]
 c_prop_v = 0.33                         # Vertical clearance of the propeller [-]
-d_prop = 0.15                           # Diameter of the propeller [m]
+d_prop = 0.1778                           # Diameter of the propeller [m]
 beta_prop =   0                         # Angle of the propeller with the horizontal plane [degrees]
 n_prop = 4                              # Number of propellers [-]
 

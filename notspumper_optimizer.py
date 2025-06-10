@@ -62,7 +62,7 @@ spacing_bumper = 0.1                    # Spacing between 2 bumpers [m]
 # Propeller Geometry
 c_prop_h = 0.33                         # Horizontal clearance of the propeller [-]
 c_prop_v = 0.33                         # Vertical clearance of the propeller [-]
-d_prop = 0.15                           # Diameter of the propeller [m]
+d_prop = 0.1778                           # Diameter of the propeller [m]
 beta_prop =   0                         # Angle of the propeller with the horizontal plane [degrees]
 n_prop = 4                              # Number of propellers [-]
 
@@ -145,7 +145,7 @@ def get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper
 x0 = [l_spine, alpha_spine, l_bumper, alpha_bumper, n_hook, l_cg, beta_spine, beta_bumper]
 
 # Bounds for the parameters
-bounds = [(0.01, 0.5), (5, 30), (0.01, 0.5), (5, 30), (1, 65), (0.03, 0.10), (0, 45), (0, 45)]
+bounds = [(0.01, 0.5), (5, 30), (0.01, 0.5), (5, 30), (1, 64), (0.03, 0.10), (0, 45), (0, 45)]
 
 # Initial mass and area calculations
 initial_mass = get_mass(l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper)[0]

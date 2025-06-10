@@ -24,9 +24,15 @@ beta_arm = 0.1
 #Propeller Arm Constants
 c_prop_h = 0.33 #0.1
 c_prop_v = 0.33 #0.1
-d_prop = 0.15
+d_prop = 0.1778
 beta_prop = 0
 n_prop = 4
+
+#========================================================
+# Propeller properties
+#========================================================
+P_max = 1301
+rpm_max = 34173
 
 #========================================================
 # Sizing Parameters
@@ -95,6 +101,17 @@ def get_max_bending_stress(M_bending, d_arm_outer, d_arm_inner):
     sigma_bending = M_bending * r_max / I
     return sigma_bending
 
+def get_propeller_torque(P_max, rpm_max):
+    # Torque = Power / Angular Velocity
+    omega_max = 2 * np.pi * rpm_max / 60  # Convert rpm to rad/s
+    torque_max = P_max / omega_max
+    return torque_max
+
+def get_propeller_torque_stress(torque_max, d_arm_outer, d_arm_inner, d_prop):
+    I = np.pi/64 * (d_arm_outer**4 - d_arm_inner**4)
+    sigma_torsion_bending = torque_max * (d_arm_outer / 2) / I
+    return sigma_torsion_bending
+
 def get_mass_arm(d_arm_outer, d_arm_inner, l_arm, density_arm):
     A = np.pi * (d_arm_outer**2 - d_arm_inner**2) / 4
     V = A * l_arm
@@ -124,7 +141,8 @@ args5 =     (min_thickness)
 args6 =     (min_prop_clearance)
 args7 =     (min_prop_clearance)
 args8 =     (E_arm, thrust_loss, W, thrust_to_weight_ratio)
-args10 =    (W, thrust_to_weight_ratio)
+args9 =     (P_max, rpm_max, d_prop)
+args10 =    (W, thrust_to_weight_ratio, P_max, rpm_max, d_prop)
 
 
 def objective(x, args):
@@ -202,21 +220,30 @@ def constraint8(x, args):
     l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
     E_arm, thrust_loss, W, thrust_to_weight_ratio = args
     max_angle_deflection = np.arctan([np.sqrt(1-(1-thrust_loss)**2)/(1-thrust_loss)])
-    print(max_angle_deflection)
     F_shear = get_max_shear(W, thrust_to_weight_ratio, n_prop)
     I = np.pi * (d_arm_outer**4 - d_arm_inner**4) / 64
     theta = F_shear*l_arm**2 /(2*E_arm*I)
     return max_angle_deflection - theta  # Ensure deflection is within limits
 
+def constraint9(x, args):
+    l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
+    P_max, rpm_max, d_prop = args
+    torque_max = get_propeller_torque(P_max, rpm_max)
+    sigma_torsion_bending = get_propeller_torque_stress(torque_max, d_arm_outer, d_arm_inner, d_prop)
+    
+    return sigma_yield_arm - sigma_torsion_bending
+
 #Principal stress
 def constraint10(x, args):
     l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
-    W, thrust_to_weight_ratio = args
+    W, thrust_to_weight_ratio, P_max, rpm_max, d_prop = args
     F_normal = get_max_normal_force(W, thrust_to_weight_ratio, n_prop)
     sigma_normal = get_max_normal_stress(F_normal, d_arm_outer, d_arm_inner)
     M_bending = get_max_bending_moment(F_normal, l_arm)
     sigma_bending = get_max_bending_stress(M_bending, d_arm_outer, d_arm_inner)
-    sigma_max = sigma_normal + sigma_bending
+    torque_max = get_propeller_torque(P_max, rpm_max)
+    sigma_torsion_bending = get_propeller_torque_stress(torque_max, d_arm_outer, d_arm_inner, d_prop)
+    sigma_max = sigma_normal + sigma_bending + sigma_torsion_bending
     F_shear = get_max_shear(W, thrust_to_weight_ratio, n_prop)
     tau_bending = get_max_shear_stress_bending(F_shear, d_arm_outer, d_arm_inner)
     T_torsion = get_torsion_moment(F_shear, l_arm, alpha_arm)
@@ -235,7 +262,8 @@ constraints = [
     {'type': 'ineq', 'fun': lambda x: constraint6(x, args6)},
     {'type': 'ineq', 'fun': lambda x: constraint7(x, args6)},
     {'type': 'ineq', 'fun': lambda x: constraint8(x, args8)},
-    {'type': 'ineq', 'fun': lambda x: constraint10(x, args1)}
+    {'type': 'ineq', 'fun': lambda x: constraint9(x, args9)},
+    {'type': 'ineq', 'fun': lambda x: constraint10(x, args10)}
     ]
 
 def optimize_propeller(x0, args, bounds, constraints):
