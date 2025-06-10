@@ -21,7 +21,7 @@ density_hook = 7000                     # Density [kg/m^3]
 # Hook Geometry
 l_hook = 0.023                          # Length of the hooks [m]
 d_hook = 1* 10**(-3)                    # Diameter of the hooks [m]
-n_hook = 20                             # Number of hooks [-]
+n_hook = 32.6179                             # Number of hooks [-]
 R_tip = 20* 10**(-6)                    # Radius of curvature of the spine [m]
 
 m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
@@ -31,15 +31,15 @@ m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
 #=======================================================================
 
 # Spine Material - Flax Fibers
-E_spine = 70*10**9                      # Elastic modulus [Pa]
+E_spine = 20*10**9                      # Elastic modulus [Pa]
 density_spine = 1500
 sigma_yield_spine = 280*10**6           # Yield strength [Pa]
 
 # Spine Geometry
-l_spine = 0.3                           # Length of the spine to cg [m]
+l_spine = 0.2004                           # Length of the spine to cg [m]
 d_spine = 0.05                          # Diameter of the spine [m]
-alpha_spine = 20                        # Angle of the spine with respect to the symmetry plane [degrees]
-beta_spine = 10                         # Angle of the spine with respect to the horizontal plane [degrees]
+alpha_spine = 22.3638                        # Angle of the spine with respect to the symmetry plane [degrees]
+beta_spine = 10.3818                         # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                             # Number of spines [-]
 spacing_spine = 0.15                    # Spacing between 2 spines [m]
 
@@ -53,10 +53,10 @@ density_bumper = 1500                    # Density [kg/m^3]
 sigma_yield_bumper = 280*10**6           # Yield strength [Pa]
 
 # Bumper Geometry
-l_bumper = 0.3                          # Length of the bumper to cg [m]
+l_bumper = 0.1924                          # Length of the bumper to cg [m]
 d_bumper = 0.05                         # Diameter of the bumper [m]
-alpha_bumper = 20                       # Angle of the bumper with respect to the symmetry plane [degrees]
-beta_bumper = 10                        # Angle of the bumper with respect to the horizontal plane [degrees]
+alpha_bumper = 15.3415                       # Angle of the bumper with respect to the symmetry plane [degrees]
+beta_bumper = 10.8026                        # Angle of the bumper with respect to the horizontal plane [degrees]
 n_bumper = 2                            # Number of bumpers [-]
 spacing_bumper = 0.1                    # Spacing between 2 bumpers [m]
 
@@ -75,7 +75,7 @@ n_prop = 4                              # Number of propellers [-]
 # Centre of Mass Properties
 #=======================================================================
 
-l_cg = 0.05                             # Distance from the surface to the center of mass [m]
+l_cg = 0.03                             # Distance from the surface to the center of mass [m]
 
 #========================================================================
 # Loading Properties

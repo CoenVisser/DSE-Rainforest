@@ -27,12 +27,12 @@ m_hook = density_hook*np.pi*(d_hook/2)**2*l_hook  # Mass of the hook [kg]
 
 # Spine Material - Flax Fibers
 E_spine = 70*10**9                      # Elastic modulus [Pa]
-density_spine = 1500
+density_spine = 1400
 sigma_yield_spine = 280*10**6           # Yield strength [Pa]
 
 # Spine Geometry
 l_spine = 0.3                           # Length of the spine to cg [m]
-d_spine = 0.05                          # Diameter of the spine [m]
+d_spine = 0.005                          # Diameter of the spine [m]
 alpha_spine = 20                        # Angle of the spine with respect to the symmetry plane [degrees]
 beta_spine = 10                         # Angle of the spine with respect to the horizontal plane [degrees]
 n_spine = 2                             # Number of spines [-]
@@ -49,7 +49,7 @@ sigma_yield_bumper = 280*10**6           # Yield strength [Pa]
 
 # Bumper Geometry
 l_bumper = 0.3                          # Length of the bumper to cg [m]
-d_bumper = 0.05                         # Diameter of the bumper [m]
+d_bumper = 0.005                         # Diameter of the bumper [m]
 alpha_bumper = 20                       # Angle of the bumper with respect to the symmetry plane [degrees]
 beta_bumper = 10                        # Angle of the bumper with respect to the horizontal plane [degrees]
 n_bumper = 2                            # Number of bumpers [-]
@@ -103,8 +103,8 @@ spacing_beta_bumper = 10
 c_prop_v_outer = 0.10
 c_prop_h_outer = 0.10
 n_load = 2
-sf_forces = 2
-sf_design = 1.5
+sf_forces = 1.25
+sf_design = 1.2
 
 
 #========================================================================
@@ -112,19 +112,19 @@ sf_design = 1.5
 #========================================================================
 
 def get_Fs(W, n_hook):
-    return W / n_hook
+    return W / n_hook * sf_design
 
 def get_Fn(l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook):
     Fn = - W*(l_cg + l_spine*np.cos(np.deg2rad(alpha_spine))*np.sin(np.deg2rad(beta_spine)))/(l_spine*np.cos(np.deg2rad(alpha_spine))*np.cos(np.deg2rad(beta_spine)) + l_bumper*np.cos(np.deg2rad(alpha_bumper))*np.cos(np.deg2rad(beta_bumper)))/n_hook
-    return Fn
+    return Fn * sf_forces
 
 def get_Fmax(v_hook, E_hook, sigma_yield_tree, R_tip, v_tree, E_tree):
     E_tot = 1/((1-v_hook**2)/E_hook + (1-v_tree**2)/E_tree)
     F_max = (np.pi*sigma_yield_tree/(1-2*v_tree))**3 * 9*R_tip**2/(2*E_tot**2)
-    return F_max
+    return F_max #Dont add safety factor, it is already in Ftot
 
 def get_Smax(F_tot, l, d):
-    return 32*F_tot*l*d/(np.pi*d**4)
+    return 32*F_tot*l*d/(np.pi*d**4) * sf_forces
 
 def get_area(l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper):
     height = l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) + l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
