@@ -54,8 +54,8 @@ Prop = CoG + np.array([l_prop*np.cos(np.deg2rad(alpha_prop))*np.cos(np.deg2rad(b
                        l_prop*np.sin(np.deg2rad(beta_prop))])
 
 B1_attachment = np.array([0.5*l_platform,0.5*w_platform,-0.5*h_platform])  # Attachment point for B1
-B2_attachment = np.array([0.5*l_platform, 0.5*w_platform,0.5*h_platform])
-H_attachment = np.array([0.5*l_platform,0.5*w_platform,0.5*h_platform])
+B2_attachment = np.array([0.052, 0.03,0.5*h_platform])
+H_attachment = np.array( [0.052,0.03,0.5*h_platform])
 Prop_attachment = np.array([0,0,0])
 
 def calculate_arm_lengths_and_angles():
@@ -84,3 +84,10 @@ print(f"Length B1: {lengths_and_angles[0]:.3f} m, Angle B1: {lengths_and_angles[
 print(f"Length B2: {lengths_and_angles[1]:.3f} m, Angle B2: {lengths_and_angles[5]:.2f} degrees, Beta B2: {lengths_and_angles[9]:.2f} degrees")
 print(f"Length H: {lengths_and_angles[2]:.3f} m, Angle H: {lengths_and_angles[6]:.2f} degrees, Beta H: {lengths_and_angles[10]:.2f} degrees")
 print(f"Length Prop: {lengths_and_angles[3]:.3f} m, Angle Prop: {lengths_and_angles[7]:.2f} degrees, Beta Prop: {lengths_and_angles[11]:.2f} degrees")
+
+print("Attachment points:")
+print(f'CoG: {CoG}')
+print(f'B1: {B1}')
+print(f'B2: {B2}')
+print(f'H: {H}')
+print(f'Prop: {Prop}')
