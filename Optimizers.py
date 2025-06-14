@@ -91,7 +91,6 @@ class Functions:
         mass_arm = V * density_arm
         return mass_arm
     
-
 class Arms(Functions):
     def __init__(self, material_properties, geometrical_properties, bark_properties, x0_arms, bounds_arms):
         self.mat = material_properties
