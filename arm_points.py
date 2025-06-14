@@ -91,3 +91,15 @@ print(f'B1: {B1}')
 print(f'B2: {B2}')
 print(f'H: {H}')
 print(f'Prop: {Prop}')
+
+def end_point(CoG, length, alpha, beta):
+    end_point = CoG + np.array([length*np.cos(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
+                                length*np.sin(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
+                                length*np.sin(np.deg2rad(beta))])
+    return end_point
+
+def length_and_angle(end_point, attachment_point):
+    length = np.linalg.norm(end_point-attachment_point)
+    alpha = np.degrees(np.arctan2(end_point[2]-attachment_point[2], np.sqrt((end_point[0]-attachment_point[0])**2+(end_point[1]-attachment_point[1])**2)))
+    beta = np.degrees(np.arctan2(end_point[1]-attachment_point[1], end_point[0]-attachment_point[0]))
+    return length, alpha, beta
