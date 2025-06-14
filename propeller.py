@@ -127,7 +127,7 @@ def get_mass_arm(d_arm_outer, d_arm_inner, l_arm, density_arm):
 
 x0 = [l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop]
 
-bounds = [(0.01, 0.4), (0.005, 0.1), (0.005, 0.1), (0, 90), (0, 90), (4, 8)]
+bounds = [(0.01, 0.4), (0.005, 0.1), (0.005, 0.1), (0, 90), (0, 45), (4, 8)]
 
 #========================================================
 #Objective function and constraints
@@ -198,21 +198,23 @@ def constraint5(x, args):
     return t - min_thickness
 
 #Propellers should not touch in y-direction
+#Fix this
 def constraint6(x, args):
     l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
     min_prop_clearance = args
     prop_radius = d_prop / 2
     min_distance = prop_radius*(1 + min_prop_clearance) #Already includes half for one side
-    y_arm = l_arm * np.sin(np.deg2rad(alpha_arm))
+    y_arm = l_arm * np.sin(np.deg2rad(alpha_arm))*np.cos(np.deg2rad(beta_arm))
     return y_arm - min_distance
 
 #Propeller should not touch in x-direction
+#Fix this
 def constraint7(x, args):
     l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop = x
     min_prop_clearance = args
     prop_radius = d_prop / 2
     min_distance = prop_radius*(1 + min_prop_clearance) #Already includes half for one side
-    x_arm = l_arm * np.cos(np.deg2rad(alpha_arm))
+    x_arm = l_arm * np.cos(np.deg2rad(alpha_arm))*np.cos(np.deg2rad(beta_arm))
     return x_arm - min_distance
 
 #Deflection
