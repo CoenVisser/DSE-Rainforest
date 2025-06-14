@@ -5,10 +5,10 @@ class Functions:
     def get_Fs(self, W, n_hook, sf_forces_spumper, **kwargs):
         return W / n_hook  * sf_forces_spumper
 
-    def get_Fn(self, l_cg, l_spine, l_bumper, alpha_spine, beta_spine, alpha_bumper, beta_bumper, W, n_hook, sf_forces_spumper, **kwargs):
+    def get_Fn(self, l_cg, l_spine, alpha_spine, beta_spine, l_foot, alpha_foot, beta_foot, W, n_hook, sf_forces_spumper, **kwargs):
         Fn = - W*(l_cg + l_spine*np.cos(np.radians(alpha_spine))*np.sin(np.radians(beta_spine))) / (
             l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) +
-            l_bumper*np.cos(np.radians(alpha_bumper))*np.cos(np.radians(beta_bumper))
+            l_foot*np.cos(np.radians(alpha_foot))*np.cos(np.radians(beta_foot))
         ) / n_hook
         return Fn * sf_forces_spumper
 
@@ -20,21 +20,11 @@ class Functions:
     def get_Smax(self, F_tot, l, d, **kwargs):
         return 32 * F_tot * l * d / (np.pi * d**4)
 
-    def get_area(self, l_spine, alpha_spine, l_bumper, alpha_bumper, beta_spine, beta_bumper, **kwargs):
-        height = l_spine * np.cos(np.radians(alpha_spine)) * np.cos(np.radians(beta_spine)) + \
-                 l_bumper * np.cos(np.radians(alpha_bumper)) * np.cos(np.radians(beta_bumper))
-        width = max(
-            l_spine * np.sin(np.radians(alpha_spine)) * np.cos(np.radians(beta_spine)),
-            l_bumper * np.sin(np.radians(alpha_bumper)) * np.cos(np.radians(beta_bumper))
-        )
-        return height * width
-
-    def get_mass(self, l_spine, d_spine, density_spine, l_bumper, d_bumper, density_bumper, n_hook, m_hook, n_spine, n_bumper, **kwargs):
+    def get_mass_spine(self, l_spine, d_spine, density_spine, n_hook, m_hook, n_spine, **kwargs):
         mass_spine = n_spine * l_spine * (np.pi * (d_spine / 2)**2) * density_spine
-        mass_bumper = n_bumper * l_bumper * (np.pi * (d_bumper / 2)**2) * density_bumper
         mass_hook = 4 * n_hook * m_hook
-        return mass_spine + mass_bumper + mass_hook, mass_spine, mass_bumper, mass_hook
-    
+        return mass_spine + mass_hook
+
     def get_max_shear(self, W, thrust_to_weight_ratio, n_prop, sf_forces_arm, **kwargs):
         F_shear = W*thrust_to_weight_ratio/n_prop
         return sf_forces_arm*F_shear
@@ -99,9 +89,6 @@ class Arms(Functions):
         self.keys = x0_arms # [l_arm, d_arm_outer, d_arm_inner, alpha_arm, beta_arm, n_prop]
         self.x0 = np.array([self.geo[k] for k in self.keys])
         self.bounds = bounds_arms
-
-        self.initial_area = np.pi * (self.geo['d_arm_outer']**2 - self.geo['d_arm_inner']**2) / 4
-        self.initial_mass = self.get_mass(**self.geo, **self.mat)[0]
 
     def unpack(self, x):
         return dict(zip(self.keys, x))
@@ -172,7 +159,7 @@ class Arms(Functions):
     def constraint_torsion(self, x): # contraint 9
         xdict = self.unpack(x)
         torque_max = self.get_propeller_torque(**self.geo)
-        sigma_torsion_bending = self.get_propeller_torque_stress(torque_max, xdict["d_arm_outer"], xdict["d_arm_inner"])
+        sigma_torsion_bending = self.get_propeller_torque_stress(torque_max, **xdict)
         return self.mat["sigma_yield_arm"] - sigma_torsion_bending
 
     def constraint_principal_stress(self, x): # contraint 10
@@ -182,7 +169,7 @@ class Arms(Functions):
         M_bending = self.get_max_bending_moment(F_normal, **xdict)
         sigma_bending = self.get_max_bending_stress(M_bending, **xdict)
         torque_max = self.get_propeller_torque(**self.geo)
-        sigma_torsion_bending = self.get_propeller_torque_stress(torque_max, xdict["d_arm_outer"], xdict["d_arm_inner"])
+        sigma_torsion_bending = self.get_propeller_torque_stress(torque_max, **xdict)
         sigma_max = sigma_normal + sigma_bending + sigma_torsion_bending
         F_shear = self.get_max_shear(**xdict, **self.bark, sf_forces_arm=self.geo["sf_forces_arm"])
         tau_bending = self.get_max_shear_stress_bending(F_shear, **xdict)
@@ -224,19 +211,13 @@ class Spines(Functions):
         self.x0 = np.array([self.geo[k] for k in self.keys])
         self.bounds = bounds_geometry
 
-        self.initial_area = self.get_area(**self.geo)
-        self.initial_mass = self.get_mass(**self.geo, **self.mat)[0]
-
     def unpack(self, x):
         return dict(zip(self.keys, x))
 
     def objective(self, x):
         xdict = self.unpack(x)
-        area = self.get_area(**xdict)
-        mass = self.get_mass(**xdict, **self.mat, d_spine=self.geo["d_spine"], d_bumper=self.geo["d_bumper"], n_spine=self.geo["n_spine"], n_bumper=self.geo["n_bumper"])[0]
-        w_area = 0.5
-        w_mass = 1 - w_area
-        return w_area * area / self.initial_area + w_mass * mass / self.initial_mass
+        mass = self.get_mass_spine(**xdict, **self.mat, **self.geo)
+        return mass
 
     def constraint_height_spine(self, x): #contraint 1
         xdict = self.unpack(x)
@@ -244,61 +225,41 @@ class Spines(Functions):
         min_height = self.geo["d_prop"]*0.5 + \
             self.geo["l_arm"] * np.cos(np.radians(self.geo["alpha_arm"])) * np.cos(np.radians(self.geo["beta_arm"]))
         return height - min_height
-    
-    # def constraint_height_bumper(self, x): #contraint 2
-    #     xdict = self.unpack(x)
-    #     height = xdict['l_bumper'] * np.cos(np.radians(xdict['alpha_bumper'])) * np.cos(np.radians(xdict['beta_bumper']))
-    #     min_height = self.geo["d_prop"]*(0.5 + self.geo["c_prop_v_outer"]) + \
-    #         self.geo["l_arm"] * np.cos(np.radians(self.geo["alpha_arm"])) * np.cos(np.radians(self.geo["beta_arm"]))
-    #     return height - min_height
 
     def constraint_force_limit(self, x): # contraint 3
         xdict = self.unpack(x)
-        Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fs = self.get_Fs(**xdict, **self.bark, sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, **self.bark, l_cg=self.geo['l_cg'], sf_forces_spumper=self.geo['sf_forces_spumper'], l_foot=self.geo['l_foot'], alpha_foot=self.geo['alpha_foot'], beta_foot=self.geo['beta_foot'])
         F_tot = np.sqrt(Fs**2 + Fn**2)
         F_max = self.get_Fmax(**self.mat, **self.geo, **self.bark)
         return F_max - F_tot
 
     def constraint_hook_yield(self, x): # contraint 4
         xdict = self.unpack(x)
-        Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fs = self.get_Fs(**xdict, **self.bark, sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, **self.bark, l_cg=self.geo['l_cg'], sf_forces_spumper=self.geo['sf_forces_spumper'], l_foot=self.geo['l_foot'], alpha_foot=self.geo['alpha_foot'], beta_foot=self.geo['beta_foot'])
         F_tot = np.sqrt(Fs**2 + Fn**2)
-        Smax = self.get_Smax(F_tot, self.geo['l_hook'], self.geo['d_hook'])
+        Smax = self.get_Smax(F_tot, **self.geo)
         return self.mat['sigma_yield_hook'] - Smax
     
     def constraint_adhesion_angle(self, x): # contraint 5
         xdict = self.unpack(x)
-        Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fs = self.get_Fs(**xdict, **self.bark, sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, **self.bark, l_cg=self.geo['l_cg'], sf_forces_spumper=self.geo['sf_forces_spumper'], l_foot=self.geo['l_foot'], alpha_foot=self.geo['alpha_foot'], beta_foot=self.geo['beta_foot'])
         return np.radians(self.geo['alpha']) + Fn/(Fs + 1e-8)
-
-    # def constraint_beta_alignment(self, x): # contraint 6
-    #     xdict = self.unpack(x)
-    #     return xdict['l_spine'] * np.sin(np.radians(xdict['beta_spine'])) - \
-    #            xdict['l_bumper'] * np.sin(np.radians(xdict['beta_bumper']))
     
     def constraint_spine_spacing(self, x): # contraint 9
         xdict = self.unpack(x)
         spacing = 2 * xdict['l_spine'] * np.sin(np.radians(xdict['alpha_spine'])) * np.cos(np.radians(xdict['beta_spine']))
         return spacing - self.geo['spacing_spine']
-    
-    # def constraint_bumper_spacing(self, x): # contraint 10
-    #     xdict = self.unpack(x)
-    #     spacing = 2 * xdict['l_bumper'] * np.sin(np.radians(xdict['alpha_bumper'])) * np.cos(np.radians(xdict['beta_bumper']))
-    #     return spacing - self.geo['spacing_bumper']
 
     def get_constraints(self):
         return [
             {'type': 'ineq', 'fun': self.constraint_height_spine},
-            # {'type': 'ineq', 'fun': self.constraint_height_bumper},
             {'type': 'ineq', 'fun': self.constraint_force_limit},
             {'type': 'ineq', 'fun': self.constraint_hook_yield},
             {'type': 'ineq', 'fun': self.constraint_adhesion_angle},
-            # {'type': 'eq', 'fun': self.constraint_beta_alignment},
             {'type': 'eq', 'fun': self.constraint_spine_spacing},
-            # {'type': 'eq', 'fun': self.constraint_bumper_spacing}
         ]
 
     def optimise(self):
