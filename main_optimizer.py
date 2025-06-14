@@ -97,17 +97,12 @@ bounds_arms = [(0.01, 0.4),
                (4, 8)
 ]
 
-x0_geometry = ["l_spine", "alpha_spine", "beta_spine",
-               "l_bumper", "alpha_bumper", "beta_bumper",
-               "n_hook"] 
+x0_spines = ["l_spine", "alpha_spine", "beta_spine", "n_hook"] 
 
-bounds_geometry = [(0.01, 0.5),  # l_spine
-                   (5, 30),     # alpha_spine
-                   (10, 45),     # beta_spine
-                   (0.01, 0.5),  # l_bumper
-                   (5, 30),     # alpha_bumper
-                   (10, 45),     # beta_bumper
-                   (1, 64),     # n_hook
+bounds_spines = [(0.01, 0.5),  # l_spine
+                 (5, 30),     # alpha_spine
+                 (10, 45),     # beta_spine
+                 (1, 64),     # n_hook
 ]
 
 x0_diameter = ["d_spine", "d_bumper"]
