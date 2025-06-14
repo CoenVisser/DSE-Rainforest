@@ -49,15 +49,16 @@ geometrical_properties = {
 
     "l_bumper": 0.3,                   # Length of the bumper to origin [m]
     "d_bumper": 0.005,                 # Diameter of the bumper [m]
-    "alpha_bumper": 20,               # Angle with respect to the symmetry plane [deg]
+    "alpha_bumper": 0,               # Angle with respect to the symmetry plane [deg]
     "beta_bumper": 10,                # Angle with respect to the horizontal plane [deg]
     "n_bumper": 2,                    # Number of bumpers [-]
     "spacing_bumper": 0.1,           # Spacing between bumpers [m]
 
-    "l_brake": 0.1,
-    "d_brake": 0.005,
-    "alpha_brake": 0,
-    "beta_brake": -10.3063,
+    "l_foot": 0.1,
+    "d_foot": 0.005,
+    "alpha_foot": 0,
+    "beta_foot": -10.3063,
+    "n_foot": 1,
 
     "l_arm": 0.5,
     "d_arm_outer": 0.02,
@@ -68,6 +69,7 @@ geometrical_properties = {
     "c_prop_h": 0.33,                 # Horizontal clearance of the propeller [-]
     "c_prop_v": 0.33,                 # Vertical clearance of the propeller [-]
     "d_prop": d_prop+delta_guard,                 # Diameter of the propeller [m]
+    "h_prop": 0.01,
     "n_prop": 4,                      # Number of propellers [-]
     "P_max": 1301,
     "rpm_max": 34173,
