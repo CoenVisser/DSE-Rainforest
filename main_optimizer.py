@@ -1,7 +1,13 @@
+import numpy as np
+
 from Optimizers import Arms, Geometry, Diameter
+from arm_points import end_point, length_and_angle
+
 
 
 m = 1.7 # Mass of bark [kg]
+d_prop = 0.1524
+delta_guard = 0.01  # Guard thickness [m]
 
 material_properties = {
     "E_hook": 70e9,                      # Elastic modulus [Pa]
@@ -60,7 +66,7 @@ geometrical_properties = {
 
     "c_prop_h": 0.33,                 # Horizontal clearance of the propeller [-]
     "c_prop_v": 0.33,                 # Vertical clearance of the propeller [-]
-    "d_prop": 0.1778,                 # Diameter of the propeller [m]
+    "d_prop": d_prop+delta_guard,                 # Diameter of the propeller [m]
     "n_prop": 4,                      # Number of propellers [-]
     "P_max": 1301,
     "rpm_max": 34173,
@@ -68,7 +74,7 @@ geometrical_properties = {
     "min_clearance": 0.0875,
     "thrust_loss": 0.03,
 
-    "l_cg": 0.05,                     # Distance from surface to centre of mass [m]
+    "l_cg": 0.03,                     # Distance from surface to centre of mass [m]
 
     "alpha": 15,                      # Adhesion load angle [deg]
 
@@ -101,7 +107,7 @@ bounds_arms = [(0.01, 0.4),
 
 x0_geometry = ["l_spine", "alpha_spine", "beta_spine",
                "l_bumper", "alpha_bumper", "beta_bumper",
-               "n_hook", "l_cg"] 
+               "n_hook"] 
 
 bounds_geometry = [(0.01, 0.5),  # l_spine
                    (5, 30),     # alpha_spine
@@ -110,7 +116,6 @@ bounds_geometry = [(0.01, 0.5),  # l_spine
                    (5, 30),     # alpha_bumper
                    (10, 45),     # beta_bumper
                    (1, 64),     # n_hook
-                   (0.03, 0.1)  # l_cg
 ]
 
 x0_diameter = ["d_spine", "d_bumper"]
@@ -159,3 +164,35 @@ print("Optimised Geometrical Properties:")
 
 for key in x0_arms + x0_geometry + x0_diameter:
     print(f"{key}: {geometrical_properties[key]}")
+
+bumper_properties = {
+    "side": "positive",
+    "length": geometrical_properties["l_bumper"],
+    "diameter": geometrical_properties["d_bumper"],
+    "alpha": geometrical_properties["alpha_bumper"],
+    "beta": geometrical_properties["beta_bumper"],
+    "number": geometrical_properties["n_bumper"],
+    "spacing": geometrical_properties["spacing_bumper"]
+}
+
+spine_properties = {
+    "side": "positive",
+    "length": geometrical_properties["l_spine"],
+    "diameter": geometrical_properties["d_spine"],
+    "alpha": geometrical_properties["alpha_spine"],
+    "beta": geometrical_properties["beta_spine"],
+    "number": geometrical_properties["n_spine"],
+    "spacing": geometrical_properties["spacing_spine"]
+}
+
+arm_properties = {
+    "side": "negative",
+    "length": geometrical_properties["l_arm"],
+    "outer_diameter": geometrical_properties["d_arm_outer"],
+    "inner_diameter": geometrical_properties["d_arm_inner"],
+    "alpha": geometrical_properties["alpha_arm"],
+    "beta": geometrical_properties["beta_arm"],
+    "number": geometrical_properties["n_prop"]
+}
+
+bumper_endpoint = end_point(geometrical_properties["l_cg"])

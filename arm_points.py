@@ -92,10 +92,15 @@ print(f'B2: {B2}')
 print(f'H: {H}')
 print(f'Prop: {Prop}')
 
-def end_point(CoG, length, alpha, beta):
-    end_point = CoG + np.array([length*np.cos(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
+def end_point(lcg, h_platform, side, length, alpha, beta):
+    if side == "positive":
+        end_point = np.array([length*np.cos(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
                                 length*np.sin(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
-                                length*np.sin(np.deg2rad(beta))])
+                                length*np.sin(np.deg2rad(beta))+ lcg])
+    elif side == "negative":
+        end_point = np.array([length*np.cos(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
+                                length*np.sin(np.deg2rad(alpha))*np.cos(np.deg2rad(beta)),
+                                -length*np.sin(np.deg2rad(beta)) - (h_platform - lcg)])
     return end_point
 
 def length_and_angle(end_point, attachment_point):
