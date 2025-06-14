@@ -255,7 +255,7 @@ class Geometry(Functions):
     def constraint_force_limit(self, x): # contraint 3
         xdict = self.unpack(x)
         Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
         F_tot = np.sqrt(Fs**2 + Fn**2)
         F_max = self.get_Fmax(**self.mat, **self.geo, **self.bark)
         return F_max - F_tot
@@ -263,7 +263,7 @@ class Geometry(Functions):
     def constraint_hook_yield(self, x): # contraint 4
         xdict = self.unpack(x)
         Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
         F_tot = np.sqrt(Fs**2 + Fn**2)
         Smax = self.get_Smax(F_tot, self.geo['l_hook'], self.geo['d_hook'])
         return self.mat['sigma_yield_hook'] - Smax
@@ -271,7 +271,7 @@ class Geometry(Functions):
     def constraint_adhesion_angle(self, x): # contraint 5
         xdict = self.unpack(x)
         Fs = self.get_Fs(self.bark['W'], xdict['n_hook'], self.geo['sf_forces_spumper'])
-        Fn = self.get_Fn(**xdict, W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
+        Fn = self.get_Fn(**xdict, l_cg=self.geo['l_cg'], W=self.bark['W'], sf_forces_spumper=self.geo['sf_forces_spumper'])
         return np.radians(self.geo['alpha']) + Fn/(Fs + 1e-8)
 
     def constraint_beta_alignment(self, x): # contraint 6
