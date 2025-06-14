@@ -252,6 +252,8 @@ class Spines(Functions):
         xdict = self.unpack(x)
         spacing = 2 * xdict['l_spine'] * np.sin(np.radians(xdict['alpha_spine'])) * np.cos(np.radians(xdict['beta_spine']))
         return spacing - self.geo['spacing_spine']
+    
+    # todo: add foot and spine matching constraint
 
     def get_constraints(self):
         return [

@@ -1,7 +1,8 @@
 import numpy as np
 
-from Optimizers import Arms, Geometry, Diameter
+from Optimizers import Arms, Spines, Diameter
 from arm_points import end_point, length_and_angle
+from bumper import get_bumper_properties
 
 
 
@@ -94,6 +95,8 @@ bark_properties = {
     "h_platform": 0.059     #Height of main body
 }
 
+geometrical_properties['l_bumper'], geometrical_properties['beta_bumper'], geometrical_properties['x_bumper'], geometrical_properties['y_bumper'], geometrical_properties['z_bumper'] = get_bumper_properties(**geometrical_properties)
+
 x0_arms = ["l_arm", "d_arm_outer", "d_arm_inner",
            "alpha_arm", "beta_arm", "n_prop"]
 
@@ -131,12 +134,12 @@ arms_optimizer.optimise()
 
 geometrical_properties = arms_optimizer.geo
 
-geometry_optimizer = Geometry(
+geometry_optimizer = Spines(
     material_properties=material_properties,
     geometrical_properties=geometrical_properties,
     bark_properties=bark_properties,
-    x0_geometry=x0_geometry,
-    bounds_geometry=bounds_geometry
+    x0_geometry=x0_spines,
+    bounds_geometry=bounds_spines
 )
 
 geometry_optimizer.optimise()
@@ -157,7 +160,7 @@ geometrical_properties = diameter_optimizer.geo
 
 print("Optimised Geometrical Properties:")
 
-for key in x0_arms + x0_geometry + x0_diameter:
+for key in x0_arms + x0_spines + x0_diameter:
     print(f"{key}: {geometrical_properties[key]}")
 
 bumper_properties = {
