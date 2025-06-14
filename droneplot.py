@@ -58,7 +58,7 @@ def platform_box_coords():
     return np.array(corners)
 
 # === SETUP PLOTS ===
-def plot_drone_2D():
+def plot_drone_2D(arms):
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     titles = ['Top View (XY)', 'Front View (XZ)', 'Side View (YZ)']
     projections = [(0, 1), (0, 2), (1, 2)]
@@ -117,7 +117,7 @@ def platform_box_coords():
     return np.array(corners)
 
 # === DRAW 3D PLOT ===
-def plot_drone_3D():
+def plot_drone_3D(arms):
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
     ax.set_title("3D View of Drone Cross Section")
