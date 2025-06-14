@@ -13,10 +13,11 @@ from scipy.optimize import fsolve
 #x' = x*cos(theta) + y*sin(theta)
 #y' = -x*sin(theta) + y*cos(theta)
 
-def b2_angles(x, x_b1_end, y_b1_end, x_b2_attachment, y_b2_attachment, l_hook):
+def foot_angles(var, x_bumper, y_bumper, x_foot_attachment, y_foot_attachment, l_spine): #returns alpha and beta for foot
     # Define the constraints for the optimization problem
-    func = [-x_b1_end*np.cos(np.deg2rad(-x[0])) - y_b1_end*(np.sin(np.deg2rad(-x[0]))) + (-x_b2_attachment-l_hook*np.cos(np.deg2rad(-x[1])))*np.cos(np.deg2rad(-x[0])) + (x_b2_attachment+l_hook*np.sin(np.deg2rad(-x[1])))*np.sin(np.deg2rad(-x[0])),
-            (x_b2_attachment+l_hook*np.cos(np.deg2rad(-x[1]))*np.sin(np.deg2rad(-x[0]))) + (x_b2_attachment+l_hook*np.sin(np.deg2rad(-x[1])))*np.cos(np.deg2rad(-x[0]))]
+    func = [-x_bumper*np.cos(np.deg2rad(-var[0])) - y_bumper*(np.sin(np.deg2rad(-var[0]))) + (-x_foot_attachment-l_spine*np.cos(np.deg2rad(-var[1])))*np.cos(np.deg2rad(-var[0])) + (x_foot_attachment+l_spine*np.sin(np.deg2rad(-var[1])))*np.sin(np.deg2rad(-var[0])),
+            (x_foot_attachment+l_spine*np.cos(np.deg2rad(-var[1]))*np.sin(np.deg2rad(-var[0]))) + (x_foot_attachment+l_spine*np.sin(np.deg2rad(-var[1])))*np.cos(np.deg2rad(-var[0]))]
 
-    root = fsolve(func, [0, 0])
+    root = fsolve(func, [0, 0]) #x is the variables for solving - initial guess
     print(f"Root found: {root}")
+    return var[0], var[1]

@@ -53,6 +53,11 @@ geometrical_properties = {
     "n_bumper": 2,                    # Number of bumpers [-]
     "spacing_bumper": 0.1,           # Spacing between bumpers [m]
 
+    "l_brake": 0.1,
+    "d_brake": 0.005,
+    "alpha_brake": 0,
+    "beta_brake": -10.3063,
+
     "l_arm": 0.5,
     "d_arm_outer": 0.02,
     "d_arm_inner": 0.015,
@@ -84,6 +89,9 @@ bark_properties = {
     "m": m,                     # Mass of bark [kg]
     "W": m * 9.81,          # Weight of bark [N]
     "thrust_to_weight_ratio": 2,  # Thrust to weight ratio [-]
+    "l_platform": 0.1,      #Length of main body
+    "w_platform": 0.062,    #Width of main body
+    "h_platform": 0.059     #Height of main body
 }
 
 x0_arms = ["l_arm", "d_arm_outer", "d_arm_inner",

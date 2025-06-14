@@ -35,7 +35,7 @@ l_initbumper = 1/np.cos(np.deg2rad(beta_initbumper)) * l_prop* np.cos(np.deg2rad
 print(l_initbumper)
 
 #The origin is at the middle of the box
-CoG = np.array([0.0, 0.0, 0.0])  # Centre of Gravity in 3D space
+CoG = np.array([0.0, 0.0, 0.5*h_platform])  # Centre of Gravity in 3D space
 
 B1 = CoG + np.array([l_initbumper*np.cos(np.deg2rad(alpha_initbumper))*np.cos(np.deg2rad(beta_initbumper)),
                      l_initbumper*np.sin(np.deg2rad(alpha_initbumper))*np.cos(np.deg2rad(beta_initbumper)),
@@ -108,3 +108,7 @@ def length_and_angle(end_point, attachment_point):
     alpha = np.degrees(np.arctan2(end_point[2]-attachment_point[2], np.sqrt((end_point[0]-attachment_point[0])**2+(end_point[1]-attachment_point[1])**2)))
     beta = np.degrees(np.arctan2(end_point[1]-attachment_point[1], end_point[0]-attachment_point[0]))
     return length, alpha, beta
+
+#todo:
+#Remove y constraint bumper-hook
+#Remove propeller constraint for hook
