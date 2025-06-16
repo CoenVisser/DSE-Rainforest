@@ -309,13 +309,13 @@ class Diameter(Functions):
         xdict = self.unpack(x)
         amoi_bumper = np.pi/4*(xdict["d_bumper"]/2)**4 
         Fbuck = 2.04*np.pi**2*self.mat["E_bumper"]*amoi_bumper/(self.geo["l_bumper"]**2)
-        return Fbuck - self.bark["W"]*self.geo["n_load"]
+        return Fbuck - self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]
     
     def constraint_buckling_foot(self, x): # contraint 3
         xdict = self.unpack(x)
         amoi_bumper = np.pi/4*(xdict["d_foot"]/2)**4 
         Fbuck = 2.04*np.pi**2*self.mat["E_foot"]*amoi_bumper/(self.geo["l_foot"]**2)
-        return Fbuck - self.bark["W"]*self.geo["n_load"]
+        return Fbuck - self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]
 
     def constraint_deflection_spine(self, x): # contraint 4
         xdict = self.unpack(x)
@@ -326,11 +326,48 @@ class Diameter(Functions):
         max_deflection = 0.1* self.geo["l_spine"]  # Maximum deflection allowed is 10% of the spine length
         return max_deflection - deflection
     
+    def constraint_delfection_bumper(self, x): # contraint 5
+        xdict = self.unpack(x)
+        amoi_bumper = np.pi/4*(xdict["d_bumper"]/2)**4 
+        V = self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]*np.sin(np.radians(self.geo["beta_bumper"]))
+        deflection = self.geo["sf_forces_spumper"] * V * self.geo["l_bumper"]**3 / (3 * self.mat["E_bumper"] * amoi_bumper)
+        max_deflection = 0.1 * self.geo["l_bumper"]
+        return max_deflection - deflection
+    
+    def constraint_yield_bumper(self, x): # contraint 6
+        xdict = self.unpack(x)
+        V = self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]* np.sin(np.radians(self.geo["beta_bumper"]))
+        Mmax = V * self.geo["l_bumper"]
+        I = np.pi/4 * (xdict["d_bumper"]/2)**4
+        sigma_bending = Mmax * (xdict["d_bumper"]/2) / I
+        return self.mat["sigma_yield_bumper"] - sigma_bending
+    
+    def constraint_yield_foot(self, x): # contraint 7
+        xdict = self.unpack(x)
+        V = self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]* np.sin(np.radians(self.geo["beta_foot"]))
+        Mmax = V * self.geo["l_foot"]/2
+        I = np.pi/4 * (xdict["d_foot"]/2)**4
+        sigma_bending = Mmax * (xdict["d_foot"]/2) / I
+        return self.mat["sigma_yield_foot"] - sigma_bending
+    
+    def constraint_deflection_foot(self, x): # contraint 8
+        xdict = self.unpack(x)
+        amoi_foot = np.pi/4*(xdict["d_foot"]/2)**4 
+        V = self.geo["sf_forces_spumper"] * self.bark["W"] * self.bark["impact_velocity"]/self.bark["impact_time"]*np.sin(np.radians(self.geo["beta_foot"]))
+        deflection = V * self.geo["l_foot"]**3 / (3 * self.mat["E_foot"] * amoi_foot)
+        max_deflection = 0.1 * self.geo["l_foot"]/2
+        return max_deflection - deflection
+    
     def get_constraints(self):
         return [
             {'type': 'ineq', 'fun': self.constraint_yield_spine},
             {'type': 'ineq', 'fun': self.constraint_buckling_bumper},
-            {'type': 'ineq', 'fun': self.constraint_deflection_spine}
+            {'type': 'ineq', 'fun': self.constraint_deflection_spine},
+            {'type': 'ineq', 'fun': self.constraint_buckling_foot},
+            {'type': 'ineq', 'fun': self.constraint_delfection_bumper},
+            {'type': 'ineq', 'fun': self.constraint_yield_bumper},
+            {'type': 'ineq', 'fun': self.constraint_yield_foot},
+            {'type': 'ineq', 'fun': self.constraint_deflection_foot}
         ]
 
     def optimise(self):
@@ -339,4 +376,6 @@ class Diameter(Functions):
             print("Diameter optimization successful.")
             for i, k in enumerate(self.keys):
                 self.geo[k] = result.x[i]
+        else:
+            print("Diameter optimization failed:", result.message)
         return result

@@ -39,3 +39,63 @@ def get_foot_properties(l_cg, l_foot, x_bumper, z_bumper, spacing_foot, l_platfo
     assert check >= 0, "BARK platform interferes, check inputs."
 
     return alpha, beta, x_foot, y_foot, z_foot
+
+def get_Fs(W, n_hook, sf_forces_spumper, **kwargs):
+    return W / n_hook  * sf_forces_spumper
+
+def get_Fn(l_cg, l_spine, alpha_spine, beta_spine, l_foot, alpha_foot, beta_foot, W, n_hook, sf_forces_spumper, **kwargs):
+    Fn = - W*(l_cg + l_spine*np.cos(np.radians(alpha_spine))*np.sin(np.radians(beta_spine))) / (
+        l_spine*np.cos(np.radians(alpha_spine))*np.cos(np.radians(beta_spine)) +
+        l_foot*np.cos(np.radians(alpha_foot))*np.cos(np.radians(beta_foot))
+    ) / n_hook
+    return Fn * sf_forces_spumper
+
+def get_spine_diameter(l_cg, l_spine, alpha_spine, beta_spine, l_foot, alpha_foot, beta_foot, W, n_hook, m_hook, sf_forces_spumper, n_spine, sigma_yield_spine, E_spine, **kwargs):
+    ds = [0.005]
+    
+    # yield
+    Fn = get_Fn(l_cg, l_spine, alpha_spine, beta_spine, l_foot, alpha_foot, beta_foot, W, n_hook, sf_forces_spumper)
+    Fs = get_Fs(W, n_hook, sf_forces_spumper)
+    F_tot = np.sqrt(Fs**2 + Fn**2)*n_spine
+    ds.append(np.sqrt(4*F_tot / (np.pi * sigma_yield_spine)))
+
+    # deflection
+    m_hooks = 4 * n_hook * m_hook
+    m_hooks_per_spine = m_hooks / n_spine
+    ds.append(2*(4 * m_hooks_per_spine * 9.81 * l_spine**2 / (0.3 * E_spine * np.pi))**(1/4))
+    
+    return max(ds)
+
+def get_foot_diameter(l_foot, beta_foot, m, sf_forces_spumper, impact_velocity, impact_time, E_foot, sigma_yield_foot, **kwargs):
+    df = [0.005]
+    
+    # buckling
+    F = sf_forces_spumper * m * impact_velocity/impact_time
+    df.append(32*F * l_foot**2 / (2.04*np.pi**3 * E_foot))
+
+    # deflection
+    F = sf_forces_spumper * m * impact_velocity/impact_time * np.sin(np.radians(beta_foot))
+    df.append(2 * (F * l_foot**2 / (3* 0.01 * E_foot * np.pi))**(1/4))
+
+    # yield
+    M = F* l_foot
+    df.append(2*(4* M / (np.pi * sigma_yield_foot))**(1/3))
+
+    return max(df)
+
+def get_bumper_diameter(l_bumper, beta_bumper, m, sf_forces_spumper, impact_velocity, impact_time, E_bumper, sigma_yield_bumper, **kwargs):
+    db = [0.005]
+    
+    # buckling
+    F = sf_forces_spumper * m * impact_velocity/impact_time
+    db.append(32*F * l_bumper**2 / (2.04*np.pi**3 * E_bumper))
+
+    # deflection
+    F = sf_forces_spumper * m * impact_velocity/impact_time * np.sin(np.radians(beta_bumper))
+    db.append(2 * (F * l_bumper**2 / (3*0.01 * E_bumper * np.pi))**(1/4))
+
+    # yield
+    M = F* l_bumper
+    db.append(2*(4* M / (np.pi * sigma_yield_bumper))**(1/3))
+
+    return max(db)

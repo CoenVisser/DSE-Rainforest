@@ -1,13 +1,13 @@
 import numpy as np
 
 from optimizers import Arms, Spines, Diameter
-from linear import get_bumper_properties, get_foot_properties
+from linear import get_bumper_properties, get_foot_properties, get_spine_diameter, get_bumper_diameter, get_foot_diameter
 from arm_coordinates import end_point, length_and_angle
 from droneplot import plot_drone_2D, plot_drone_3D
 
 
 
-m = 1.44162 # Mass of bark [kg]
+m = 1.628 # Mass of bark [kg]
 d_prop = 0.1778
 delta_guard = 0.01  # Guard thickness [m]
 l_platform = 0.15  # Length of main body [m]
@@ -62,7 +62,7 @@ geometrical_properties = {
     "n_bumper": 1,                    # Number of bumpers [-]
 
     "l_foot": 0.21,                   
-    "d_foot": 0.005,
+    "d_foot": 0.02,
     "alpha_foot": 0,
     "beta_foot": 10,
     "n_foot": 2,
@@ -107,6 +107,7 @@ bark_properties = {
     "m": m,                     # Mass of bark [kg]
     "W": m * 9.81,          # Weight of bark [N]
     "thrust_to_weight_ratio": 2,  # Thrust to weight ratio [-]
+    "impact_time": 0.01 # Impact time [s]
 }
 
 x0_arms = ["l_arm", "d_arm_outer", "d_arm_inner",
@@ -130,11 +131,11 @@ bounds_spines = [(0.01, 0.5),  # l_spine
 
 x0_diameter = ["d_spine", "d_bumper", "d_foot"]
 
-bounds_diameter = [(0.005, 0.1),  # d_spine
-                   (0.01, 0.1),   # d_bumper
-                   (0.005, 0.1)    # d_foot
+# bounds_diameter = [(0.005, 0.1),  # d_spine
+#                    (0.01, 0.1),   # d_bumper
+#                    (0.005, 0.1)    # d_foot
 
-]
+# ]
 
 print("Starting optimization...")
 
@@ -168,21 +169,28 @@ geometry_optimizer.optimise()
 
 geometrical_properties = geometry_optimizer.geo
 
-diameter_optimizer = Diameter(
-    material_properties=material_properties,
-    geometrical_properties=geometrical_properties,
-    bark_properties=bark_properties,
-    x0_diameter=x0_diameter,
-    bounds_diameter=bounds_diameter
-)
+bark_properties["impact_velocity"] = np.sqrt(2*9.81*geometrical_properties["l_bumper"]*(np.cos(np.radians(geometrical_properties["beta_bumper"]))-np.sin(np.radians(geometrical_properties["beta_bumper"]))))
+print(f"Impact velocity: {bark_properties['impact_velocity']:.4f} m/s")
 
-diameter_optimizer.optimise()
+# diameter_optimizer = Diameter(
+#     material_properties=material_properties,
+#     geometrical_properties=geometrical_properties,
+#     bark_properties=bark_properties,
+#     x0_diameter=x0_diameter,
+#     bounds_diameter=bounds_diameter
+# )
 
-geometrical_properties = diameter_optimizer.geo
+# diameter_optimizer.optimise()
+
+# geometrical_properties = diameter_optimizer.geo
+
+geometrical_properties["d_spine"] = get_spine_diameter(**geometrical_properties, **material_properties, **bark_properties)
+geometrical_properties["d_bumper"] = get_bumper_diameter(**geometrical_properties, **material_properties, **bark_properties)
+geometrical_properties["d_foot"] = get_foot_diameter(**geometrical_properties, **material_properties, **bark_properties)
 
 print("Optimised Geometrical Properties:")
 
-for key in x0_arms + x0_spines + x0_diameter:
+for key in x0_arms + x0_spines + x0_diameter + x0_bumper + x0_foot:
     print(f"{key}: {geometrical_properties[key]}")
 
 geometrical_properties["x_arms"], geometrical_properties["y_arms"], geometrical_properties["z_arms"] = end_point(
@@ -203,7 +211,7 @@ geometrical_properties["x_spines"], geometrical_properties["y_spines"], geometri
     geometrical_properties["beta_spine"]
 )
 
-geometrical_properties["end_point_spine"] = np.array([geometrical_properties["x_spines"],
+geometrical_properties["end_point_spines"] = np.array([geometrical_properties["x_spines"],
                                                         geometrical_properties["y_spines"],
                                                         geometrical_properties["z_spines"]])
 
@@ -220,13 +228,13 @@ geometrical_properties["end_point_bumper"] = np.array([geometrical_properties["x
                                                         geometrical_properties["z_bumper"]])
 
 print("End Points [x, y, z]:")
-print(f"Spine: {geometrical_properties['end_point_spine']}")
+print(f"Spine: {geometrical_properties['end_point_spines']}")
 print(f"Foot: {geometrical_properties['end_point_foot']}")
 print(f"Arms: {geometrical_properties['end_point_arms']}")
 print(f"Bumper: {geometrical_properties['end_point_bumper']}")
 
 l_spine_true, alpha_spine_true, beta_spine_true = length_and_angle(
-    geometrical_properties["end_point_spine"],
+    geometrical_properties["end_point_spines"],
     geometrical_properties["attachment_spines"]
 )
 
@@ -249,12 +257,15 @@ mass = geometrical_properties["n_spine"]*l_spine_true*geometrical_properties["d_
          geometrical_properties["n_bumper"]*l_bumper_true*geometrical_properties["d_bumper"]**2*np.pi/4*material_properties["density_bumper"] + \
             geometrical_properties["n_foot"]*l_foot_true*geometrical_properties["d_foot"]**2*np.pi/4*material_properties["density_foot"] + \
             geometrical_properties["n_prop"]*l_arms_true*(geometrical_properties["d_arm_outer"]-geometrical_properties["d_arm_inner"])**2*np.pi/4*material_properties["density_arm"] + \
-            geometrical_properties["n_hook"]*material_properties["m_hook"]*4 + 0.003*(2*l_platform*w_platform + 2*l_platform*h_platform + 2*w_platform*h_platform) * material_properties["density_arm"]
+            geometrical_properties["n_hook"]*material_properties["m_hook"]*4 + 0.003*(2*l_platform*w_platform + 2*l_platform*h_platform + 2*w_platform*h_platform) * material_properties["density_arm"] + 0.12
 
-print(f"Total mass: {mass:.4f} kg")
+print(f"Total structure mass: {mass:.4f} kg")
+print(f"Total mass: {1.20022 + mass:.4f} kg")
 
 points = [
     {
+        "attachment_point": geometrical_properties["attachment_arms"],
+        "end_point": geometrical_properties["end_point_arms"],
         "length": l_arms_true,
         "alpha": alpha_arms_true,
         "beta": beta_arms_true,
@@ -262,6 +273,8 @@ points = [
         "label": "Propeller"
     },
     {
+        "attachment_point": geometrical_properties["attachment_bumper"],
+        "end_point": geometrical_properties["end_point_bumper"],
         "length": l_bumper_true,
         "alpha": alpha_bumper_true,
         "beta": beta_bumper_true,
@@ -269,20 +282,27 @@ points = [
         "label": "Bumper"
     },
     {
+        "attachment_point": geometrical_properties["attachment_spines"],
+        "end_point": geometrical_properties["end_point_spines"],
+        "length": l_spine_true,
+        "alpha": alpha_spine_true,
+        "beta": beta_spine_true,
+        "color": "red",
+        "label": "Spine"
+    },
+    {
+        "attachment_point": geometrical_properties["attachment_foot"],
+        "end_point": geometrical_properties["end_point_foot"],
         "length": l_foot_true,
         "alpha": alpha_foot_true,
         "beta": beta_foot_true,
         "color": "green",
         "label": "Foot"
     },
-    {
-        "length": l_spine_true,
-        "alpha": alpha_spine_true,
-        "beta": beta_spine_true,
-        "color": "red",
-        "label": "Spine"
-    }
 ]
+
+# plot_drone_2D(points)
+# plot_drone_3D(points)
 
 print("Length and Angles:")
 for point in points:
